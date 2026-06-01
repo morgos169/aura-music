@@ -700,6 +700,157 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    /* ==========================================================================
+       모바일 및 태블릿 최적화 반응형 레이아웃 (PC 기능 100% 유지)
+       ========================================================================== */
+    @media (max-width: 768px) {
+      /* 1. 전체 앱 레이아웃을 상하 구조로 변경 */
+      body {
+        overflow: hidden;
+      }
+      
+      .app-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        height: calc(100vh - 145px); /* 모바일 하단 플레이어 높이만큼 제외 */
+      }
+
+      /* 2. 좌측 사이드바 -> 상단 고정 네비게이션바로 변경 */
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 0.5rem 1rem;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        background-color: var(--bg-sidebar);
+        z-index: 100;
+      }
+
+      .brand-section {
+        display: none; /* 모바일 화면 공간 확보를 위해 로고 텍스트 숨김 */
+      }
+
+      .nav-menu {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-around;
+        gap: 0.25rem;
+      }
+
+      .nav-item {
+        padding: 0.6rem;
+        font-size: 0.85rem;
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+        gap: 0.4rem;
+        border-radius: 6px;
+      }
+
+      /* 3. 메인 뷰포트 및 헤더 조절 */
+      .top-header-bar {
+        padding: 0.5rem 1rem;
+      }
+
+      .search-wrapper {
+        max-width: 100%; /* 검색창이 화면 가로를 꽉 채우도록 설정 */
+      }
+
+      .view-content-pane {
+        padding: 1rem 1rem 3rem 1rem;
+      }
+
+      /* 4. 홈 화면 항목 배치 최적화 */
+      .quick-picks-grid {
+        grid-auto-columns: minmax(280px, 1fr); /* 모바일 좁은 화면에서도 카드가 깨지지 않게 조정 */
+        gap: 0.5rem 1rem;
+      }
+
+      .yt-cards-grid {
+        grid-template-columns: repeat(2, 1fr); /* 추천 믹스 등을 모바일 앱처럼 2열 구조로 배치 */
+        gap: 0.75rem;
+      }
+
+      /* 5. 보관함 및 설정 탭의 반반(1fr 1fr) 구조 -> 모바일 세로 적층 구조로 강제 변경 */
+      #pane-library > div {
+        grid-template-columns: 1fr !important;
+        gap: 2rem !important;
+      }
+
+      /* 6. 하단 플레이어 데크(Player Deck) 3열 구조 -> 3줄 적층형 구조로 전면 재배치 */
+      .persistent-player-deck {
+        display: flex;
+        flex-direction: column;
+        height: 145px; /* 모든 기능을 넉넉히 담기 위해 높이 확장 */
+        padding: 0.6rem 1rem;
+        gap: 0.5rem;
+        justify-content: center;
+        background-color: #121212;
+      }
+
+      /* 첫 번째 줄: 곡 정보 및 좋아요 버튼 */
+      .metadata-deck-display {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .metadata-deck-display .qp-meta {
+        padding-right: 1rem;
+      }
+
+      /* 두 번째 줄: 미디어 컨트롤 및 프로그레스 바 */
+      .center-stream-controls {
+        width: 100%;
+        gap: 0.4rem;
+      }
+
+      .playback-buttons-cluster {
+        gap: 1.2rem;
+      }
+      
+      .master-play-circle {
+        width: 34px;
+        height: 34px;
+      }
+
+      .progress-slider-bar-track {
+        max-width: 100%;
+      }
+
+      /* 세 번째 줄: 가사/대기열 토글 및 볼륨 조절 슬라이더 */
+      .utility-audio-controls {
+        width: 100%;
+        justify-content: space-between;
+        padding-top: 0.4rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      
+      #deck-volume-slider {
+        width: 90px; /* 터치하기 편하도록 크기 유지 */
+      }
+
+      /* 7. 우측 서랍장(대기열 / 가사 창) 모바일 전체 화면 최적화 */
+      .queue-panel-drawer {
+        width: 100% !important;
+        right: -100% !important;
+        bottom: 145px !important; /* 플레이어 바로 위까지 채우도록 조정 */
+        top: 0 !important;
+        height: calc(100vh - 145px) !important;
+        border-left: none;
+      }
+
+      .queue-panel-drawer.open {
+        right: 0 !important;
+      }
+
+      /* 8. 토스트 알림 위치를 플레이어 위쪽으로 조정 */
+      .alert-toast-popup {
+        bottom: 160px;
+      }
+    }
   </style>
 </head>
 <body>
