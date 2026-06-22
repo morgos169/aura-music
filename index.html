@@ -178,7 +178,7 @@
       display: block;
     }
 
-    /* Mood Filter Chips (YT Music Style) */
+    /* Mood Filter Chips */
     .mood-chips-container {
       display: flex;
       gap: 0.5rem;
@@ -209,7 +209,7 @@
       font-weight: 600;
     }
 
-    /* YT Music Shelf Sections */
+    /* Shelves */
     .shelf-section {
       margin-bottom: 2.5rem;
     }
@@ -227,7 +227,6 @@
       letter-spacing: -0.02em;
     }
 
-    /* Quick Picks Grid (4 rows high, multi-column) */
     .quick-picks-grid {
       display: grid;
       grid-template-rows: repeat(4, auto);
@@ -264,7 +263,7 @@
     .qp-meta {
       flex: 1;
       min-width: 0;
-      padding-right: 2.5rem; /* Space for action button */
+      padding-right: 2.5rem;
     }
 
     .qp-title {
@@ -284,7 +283,6 @@
       text-overflow: ellipsis;
     }
 
-    /* Inline Add Button Style */
     .inline-add-btn {
       position: absolute;
       right: 0.5rem;
@@ -309,7 +307,6 @@
       transform: translateY(-50%) scale(1.1);
     }
 
-    /* Standard Cards Grid */
     .yt-cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -362,7 +359,6 @@
       border: 1px solid rgba(255,255,255,0.2);
     }
 
-    /* Card Add Button Overlay */
     .card-add-overlay-btn {
       position: absolute;
       top: 0.5rem;
@@ -409,7 +405,6 @@
       text-overflow: ellipsis;
     }
 
-    /* Playlist List Table View */
     .track-list-table {
       display: flex;
       flex-direction: column;
@@ -438,7 +433,6 @@
       color: var(--accent);
     }
 
-    /* Custom Playlists List Design */
     .playlist-folder-item {
       background: #161616;
       border: 1px solid #262626;
@@ -456,7 +450,7 @@
       padding-bottom: 0.5rem;
     }
 
-    /* Bottom Player Deck Bar */
+    /* Player Deck */
     .persistent-player-deck {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -576,7 +570,7 @@
       gap: 0.75rem;
     }
 
-    /* Playlist Selector Modal Modal */
+    /* Modals & Drawers */
     .playlist-modal-popup {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -650,7 +644,6 @@
       border-color: #666;
     }
 
-    /* Queue Up-Next Panel View */
     .queue-panel-drawer {
       position: fixed;
       right: -360px;
@@ -679,7 +672,6 @@
       gap: 0.5rem;
     }
 
-    /* Toast Design */
     .alert-toast-popup {
       position: fixed;
       bottom: 110px; left: 50%;
@@ -701,22 +693,38 @@
       transform: translateX(-50%) translateY(0);
     }
 
+    /* 공용 무한 로딩 버튼 디자인 */
+    .load-more-btn {
+      display: none;
+      width: 100%;
+      padding: 14px;
+      margin-top: 20px;
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .load-more-btn:hover {
+      background: rgba(255,255,255,0.15);
+      border-color: rgba(255,255,255,0.3);
+    }
+
     /* ==========================================================================
        모바일 및 태블릿 최적화 반응형 레이아웃 (PC 기능 100% 유지)
        ========================================================================== */
     @media (max-width: 768px) {
-      /* 1. 전체 앱 레이아웃을 상하 구조로 변경 */
-      body {
-        overflow: hidden;
-      }
+      body { overflow: hidden; }
       
       .app-layout {
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
-        height: calc(100vh - 145px); /* 모바일 하단 플레이어 높이만큼 제외 */
+        height: calc(100vh - 145px);
       }
 
-      /* 2. 좌측 사이드바 -> 상단 고정 네비게이션바로 변경 */
       .sidebar {
         border-right: none;
         border-bottom: 1px solid var(--border);
@@ -729,9 +737,7 @@
         z-index: 100;
       }
 
-      .brand-section {
-        display: none; /* 모바일 화면 공간 확보를 위해 로고 텍스트 숨김 */
-      }
+      .brand-section { display: none; }
 
       .nav-menu {
         flex-direction: row;
@@ -750,77 +756,42 @@
         border-radius: 6px;
       }
 
-      /* 3. 메인 뷰포트 및 헤더 조절 */
-      .top-header-bar {
-        padding: 0.5rem 1rem;
-      }
+      .top-header-bar { padding: 0.5rem 1rem; }
+      .search-wrapper { max-width: 100%; }
+      .view-content-pane { padding: 1rem 1rem 3rem 1rem; }
 
-      .search-wrapper {
-        max-width: 100%; /* 검색창이 화면 가로를 꽉 채우도록 설정 */
-      }
-
-      .view-content-pane {
-        padding: 1rem 1rem 3rem 1rem;
-      }
-
-      /* 4. 홈 화면 항목 배치 최적화 */
       .quick-picks-grid {
-        grid-auto-columns: minmax(280px, 1fr); /* 모바일 좁은 화면에서도 카드가 깨지지 않게 조정 */
+        grid-auto-columns: minmax(280px, 1fr);
         gap: 0.5rem 1rem;
       }
 
       .yt-cards-grid {
-        grid-template-columns: repeat(2, 1fr); /* 추천 믹스 등을 모바일 앱처럼 2열 구조로 배치 */
+        grid-template-columns: repeat(2, 1fr);
         gap: 0.75rem;
       }
 
-      /* 5. 보관함 및 설정 탭의 반반(1fr 1fr) 구조 -> 모바일 세로 적층 구조로 강제 변경 */
       #pane-library > div {
         grid-template-columns: 1fr !important;
         gap: 2rem !important;
       }
 
-      /* 6. 하단 플레이어 데크(Player Deck) 3열 구조 -> 3줄 적층형 구조로 전면 재배치 */
       .persistent-player-deck {
         display: flex;
         flex-direction: column;
-        height: 145px; /* 모든 기능을 넉넉히 담기 위해 높이 확장 */
+        height: 145px;
         padding: 0.6rem 1rem;
         gap: 0.5rem;
         justify-content: center;
         background-color: #121212;
       }
 
-      /* 첫 번째 줄: 곡 정보 및 좋아요 버튼 */
-      .metadata-deck-display {
-        width: 100%;
-        justify-content: space-between;
-      }
-      
-      .metadata-deck-display .qp-meta {
-        padding-right: 1rem;
-      }
+      .metadata-deck-display { width: 100%; justify-content: space-between; }
+      .metadata-deck-display .qp-meta { padding-right: 1rem; }
+      .center-stream-controls { width: 100%; gap: 0.4rem; }
+      .playback-buttons-cluster { gap: 1.2rem; }
+      .master-play-circle { width: 34px; height: 34px; }
+      .progress-slider-bar-track { max-width: 100%; }
 
-      /* 두 번째 줄: 미디어 컨트롤 및 프로그레스 바 */
-      .center-stream-controls {
-        width: 100%;
-        gap: 0.4rem;
-      }
-
-      .playback-buttons-cluster {
-        gap: 1.2rem;
-      }
-      
-      .master-play-circle {
-        width: 34px;
-        height: 34px;
-      }
-
-      .progress-slider-bar-track {
-        max-width: 100%;
-      }
-
-      /* 세 번째 줄: 가사/대기열 토글 및 볼륨 조절 슬라이더 */
       .utility-audio-controls {
         width: 100%;
         justify-content: space-between;
@@ -828,28 +799,19 @@
         border-top: 1px solid rgba(255, 255, 255, 0.05);
       }
       
-      #deck-volume-slider {
-        width: 90px; /* 터치하기 편하도록 크기 유지 */
-      }
+      #deck-volume-slider { width: 90px; }
 
-      /* 7. 우측 서랍장(대기열 / 가사 창) 모바일 전체 화면 최적화 */
       .queue-panel-drawer {
         width: 100% !important;
         right: -100% !important;
-        bottom: 145px !important; /* 플레이어 바로 위까지 채우도록 조정 */
+        bottom: 145px !important;
         top: 0 !important;
         height: calc(100vh - 145px) !important;
         border-left: none;
       }
 
-      .queue-panel-drawer.open {
-        right: 0 !important;
-      }
-
-      /* 8. 토스트 알림 위치를 플레이어 위쪽으로 조정 */
-      .alert-toast-popup {
-        bottom: 160px;
-      }
+      .queue-panel-drawer.open { right: 0 !important; }
+      .alert-toast-popup { bottom: 160px; }
     }
   </style>
 </head>
@@ -865,6 +827,7 @@
       
       <nav class="nav-menu">
         <button type="button" class="nav-item active" data-target="pane-home">홈</button>
+        <button type="button" class="nav-item" data-target="pane-search">검색</button>
         <button type="button" class="nav-item" data-target="pane-top100">차트 (Top 100)</button>
         <button type="button" class="nav-item" data-target="pane-library">보관함 및 설정</button>
       </nav>
@@ -904,6 +867,17 @@
           <div class="shelf-section">
             <div class="shelf-header"><h2 class="shelf-title">추천 믹스</h2></div>
             <div class="yt-cards-grid" id="home-recommend-grid-target"></div>
+            <button id="home-load-more-btn" class="load-more-btn">추천 곡 더 보기 ▽</button>
+          </div>
+        </section>
+
+        <section class="view-pane" id="pane-search">
+          <div class="shelf-section">
+            <div class="shelf-header">
+              <h2 class="shelf-title" id="search-shelf-title">검색을 시작해 보세요</h2>
+            </div>
+            <div class="track-list-table" id="search-list-target"></div>
+            <button id="search-load-more-btn" class="load-more-btn">결과 더 보기 ▽</button>
           </div>
         </section>
 
@@ -1018,7 +992,6 @@
     (function() {
       "use strict";
 
-      // Curated Master YouTube Music Multi-Mood Dataset Database Repo
       const CORE_DATABASE = {
         all: [
           { id: "ImuWa3SJulY", title: "고민중독 (T.B.H)", channelTitle: "QWER" },
@@ -1056,29 +1029,30 @@
         ]
       };
 
-      // 정적 가사 사전 빌드 데이터베이스 레포지토리
-      const LYRICS_DATABASE = {
-        "ImuWa3SJulY": `밴드 연습실 불이 켜지면\n우리의 이야기가 시작돼\n너를 향한 나의 마음이\n고민중독 소리치고 있어\n\n말하지 못했던 수많은 기억들\n이제는 노래로 전하고 싶어\n서툴지만 진심을 가득 담아서\n너에게 이 멜로디를 바칠게`,
-        "phuiiNCxRMg": `Su-su-supernova Nova\n사건은 다가와 어스름히\n커져가는 소리 들려와\n\n내 안의 작은 우주가 깨어나\n빛을 발하는 순간을 기억해\n우린 모두 찬란한 은하수야\nSupernova 빛을 따라 가`,
-        "9wUKhEgnllc": `Hype boy 너만 원해\nHype boy 내가 바란 사람\n\n어디서든 빛나는 너의 눈빛에\n내 마음은 자꾸만 설레어와\n너와 함께 춤추고 싶은 이 밤\nHype boy 너의 손을 잡고 싶어`,
-        "ivdTn0L5t5U": `내 삶의 주인공은 바로 나\n어제보다 빛날 내일의 나를 봐\n\n하늘 높이 날아오르는 새처럼\n어디든 갈 수 있어 두려움 없이\nI AM 멋진 나를 세상에 보여줄게\n가장 아름다운 순간은 바로 지금`
-      };
-
       const STATE = {
         apiKey: "",
         likedTracks: [],
         historyTracks: [],
-        customPlaylists: {}, // Structure: { "플레이리스트이름": [tracks...] }
+        customPlaylists: {},
         playbackQueue: [],
         currentQueueIndex: -1,
         isEngineReady: false,
         playerEngine: null,
         tickerTimer: null,
         currentMood: "all",
-        repeatMode: "none", // none, one, all
+        repeatMode: "none",
         shuffleActive: false,
         preShuffleQueue: [],
-        pendingModalTrack: null // Temporary track holder for modal selection
+        pendingModalTrack: null,
+        
+        // 검색 페이지 무한 로딩 상태 관리
+        currentSearchQuery: "",
+        searchNextPageToken: "",
+        currentSearchTracks: [],
+        
+        // 홈 화면 무한 로딩 상태 관리
+        homeNextPageToken: "",
+        homeRecommendTracks: []
       };
 
       const dom = {
@@ -1091,6 +1065,8 @@
         historyGrid: document.getElementById("history-grid-target"),
         quickPicksGrid: document.getElementById("quick-picks-target"),
         recommendGrid: document.getElementById("home-recommend-grid-target"),
+        homeLoadMoreBtn: document.getElementById("home-load-more-btn"), // 홈 무한 스크롤
+        
         likedTable: document.getElementById("library-liked-target"),
         playlistsContainer: document.getElementById("library-playlists-container"),
         createPlaylistInput: document.getElementById("library-playlist-name-input"),
@@ -1122,20 +1098,22 @@
         toastBox: document.getElementById("app-toast-alert-box"),
         recommendTitle: document.getElementById("recommend-shelf-title"),
 
-        // Modal Elements
         playlistModal: document.getElementById("playlist-selector-modal"),
         modalPlaylistsBucket: document.getElementById("modal-playlists-bucket"),
         modalCloseBtn: document.getElementById("modal-close-trigger-btn"),
 
-        // Lyrics & Top 100 신규 바인딩 인터페이스 노드
         lyricsToggleBtn: document.getElementById("utility-lyrics-toggle-btn"),
         lyricsDrawer: document.getElementById("lyrics-panel-drawer"),
         lyricsContent: document.getElementById("lyrics-content-target"),
         top100ListTarget: document.getElementById("top100-list-target"),
-        top100Title: document.getElementById("top100-shelf-title")
+        top100Title: document.getElementById("top100-shelf-title"),
+
+        searchPane: document.getElementById("pane-search"),
+        searchTitle: document.getElementById("search-shelf-title"),
+        searchListTarget: document.getElementById("search-list-target"),
+        searchLoadMoreBtn: document.getElementById("search-load-more-btn")
       };
 
-      // Title String Text Processing Regex Formatter (Removes messy YouTube tags)
       function cleanTrackTitle(title) {
         return title
           .replace(/\[오피셜\]|\[MV\]|\[Music Video\]|오피셜|뮤직비디오/gi, "")
@@ -1186,7 +1164,6 @@
         return await res.json();
       }
 
-      // 고품질 고정 데모 Top 100 제너레이터 시드 어레이 매트릭스
       function generateMockTop100() {
         const seed = [
           { id: "phuiiNCxRMg", title: "Supernova", channelTitle: "aespa" },
@@ -1195,42 +1172,24 @@
           { id: "9wUKhEgnllc", title: "Hype Boy", channelTitle: "NewJeans" },
           { id: "TQEukk4O1dU", title: "Love wins all", channelTitle: "IU" },
           { id: "ivdTn0L5t5U", title: "I AM", channelTitle: "IVE" },
-          { id: "xO1Bv-0Xy0Q", title: "한 페이지가 될 수 있게", channelTitle: "DAY6" },
-          { id: "KszpL_E_D_Y", title: "밤양갱", channelTitle: "비비 (BIBI)" },
-          { id: "G48Z_mSHow0", title: "To. X", channelTitle: "태연 (TAEYEON)" },
-          { id: "hV9R7m6U_S0", title: "첫 만남은 계획대로 되지 않아", channelTitle: "TWS" },
-          { id: "ArmDp-zijuc", title: "EASY", channelTitle: "LE SSERAFIM" },
-          { id: "fzh7M6v6CqE", title: "DRAMA", channelTitle: "aespa" },
-          { id: "pSUydWEqKwE", title: "Ditto", channelTitle: "NewJeans" },
-          { id: "Qcc8_eS8Aas", title: "Welcome to the Show", channelTitle: "DAY6" },
-          { id: "U7YfN_0C8yY", title: "Love Lee", channelTitle: "AKMU" },
-          { id: "A67Z79YmdvU", title: "Love 119", channelTitle: "RIIZE" },
-          { id: "0v98_mEwySg", title: "헤어지자 말해요", channelTitle: "박재정" }
+          { id: "xO1Bv-0Xy0Q", title: "한 페이지가 될 수 있게", channelTitle: "DAY6" }
         ];
         
         let list = [];
         for (let i = 0; i < 100; i++) {
           const s = seed[i % seed.length];
-          list.push({
-            id: s.id,
-            title: s.title,
-            channelTitle: s.channelTitle,
-            rank: i + 1
-          });
+          list.push({ id: s.id, title: s.title, channelTitle: s.channelTitle, rank: i + 1 });
         }
         return list;
       }
 
-      // Top 100 차트 렌더링 코어 로직 엔진 분기 (멜론 차트 연동)
       async function renderTop100View() {
         dom.top100ListTarget.innerHTML = `<p style="color:var(--text-muted); padding:1rem;">차트 데이터를 실시간으로 동기화하는 중입니다...</p>`;
-        
         try {
           const res = await fetch('/api/top100');
           const data = await res.json();
           if (data.success && Array.isArray(data.tracks)) {
             const tracks = data.tracks;
-            
             dom.top100ListTarget.innerHTML = tracks.map((t, idx) => `
               <div class="table-row" data-id="${t.id}" data-index="${idx}">
                 <span style="font-size:1rem; font-weight:700; color:var(--accent); width:35px; text-align:center;">${t.rank}</span>
@@ -1242,29 +1201,10 @@
                 <button type="button" class="inline-add-btn" data-id="${t.id}" style="right: 1rem;" title="재생목록에 추가">＋</button>
               </div>
             `).join("");
-
             dom.top100Title.textContent = "실시간 인기 차트 Top 100 (Melon 실시간 차트 연동)";
-
-            dom.top100ListTarget.querySelectorAll(".table-row").forEach(el => {
-              el.addEventListener("click", (e) => {
-                if (e.target.classList.contains('inline-add-btn')) return;
-                setPlaylistContextAndPlay(tracks, el.dataset.id, el.dataset.index);
-              });
-            });
-
-            dom.top100ListTarget.querySelectorAll(".inline-add-btn").forEach(btn => {
-              btn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                const trackObj = tracks.find(t => t.id === btn.dataset.id);
-                openPlaylistModal(trackObj);
-              });
-            });
-          } else {
-            throw new Error("Invalid chart data");
-          }
+            bindTrackEvents(dom.top100ListTarget, tracks);
+          } else { throw new Error("Invalid chart data"); }
         } catch (e) {
-          console.error(e);
-          // Fallback to mock data if backend fails
           const tracks = generateMockTop100();
           dom.top100Title.textContent = "실시간 인기 차트 Top 100 (데모 데이터)";
           dom.top100ListTarget.innerHTML = tracks.map((t, idx) => `
@@ -1278,50 +1218,28 @@
               <button type="button" class="inline-add-btn" data-id="${t.id}" style="right: 1rem;" title="재생목록에 추가">＋</button>
             </div>
           `).join("");
-
-          dom.top100ListTarget.querySelectorAll(".table-row").forEach(el => {
-            el.addEventListener("click", (e) => {
-              if (e.target.classList.contains('inline-add-btn')) return;
-              setPlaylistContextAndPlay(tracks, el.dataset.id, el.dataset.index);
-            });
-          });
-
-          dom.top100ListTarget.querySelectorAll(".inline-add-btn").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              const trackObj = tracks.find(t => t.id === btn.dataset.id);
-              openPlaylistModal(trackObj);
-            });
-          });
+          bindTrackEvents(dom.top100ListTarget, tracks);
         }
       }
 
-      // 가사 정보 추출 로드 및 비동기 주입 로직
       function updateLyricsView() {
         const track = STATE.playbackQueue[STATE.currentQueueIndex];
         if (!track) {
           dom.lyricsContent.innerHTML = "재생 중인 곡이 없습니다.";
           return;
         }
-        
         dom.lyricsContent.innerHTML = `<p style="color:var(--text-muted); padding:1rem;">가사를 불러오는 중입니다...</p>`;
-
-        // Fetch lyrics from our server endpoint
         const title = track.title;
         const artist = track.channelTitle || track.artist || "";
-        const melonId = /^\d+$/.test(track.id) ? track.id : ""; // If it's numeric, it's Melon ID
+        const melonId = /^\d+$/.test(track.id) ? track.id : "";
 
         fetch(`/api/lyrics?title=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist)}&melonId=${melonId}`)
           .then(res => res.json())
           .then(data => {
-            // Check if the track hasn't changed while we were fetching
             const currentTrack = STATE.playbackQueue[STATE.currentQueueIndex];
-            if (currentTrack && currentTrack.id === track.id) {
-              dom.lyricsContent.innerText = data.lyrics;
-            }
+            if (currentTrack && currentTrack.id === track.id) { dom.lyricsContent.innerText = data.lyrics; }
           })
           .catch(err => {
-            console.error(err);
             const currentTrack = STATE.playbackQueue[STATE.currentQueueIndex];
             if (currentTrack && currentTrack.id === track.id) {
               dom.lyricsContent.innerText = `[${title} - ${artist}]\n\n가사를 불러올 수 없습니다.\n\nAura Music과 함께 즐거운 감상 되세요.`;
@@ -1329,93 +1247,150 @@
           });
       }
 
-      // YouTube Music Optimized Search Fetch Engine Dispatch Task
-      async function dispatchSearch(query) {
+      // 검색 무한 로딩
+      async function dispatchSearch(query, isLoadMore = false) {
         if (!query.trim()) {
-          renderHomeFeeds();
+          switchPanel("pane-home");
           return;
         }
 
+        if (!isLoadMore) {
+          STATE.currentSearchQuery = query;
+          STATE.currentSearchTracks = [];
+          dom.searchTitle.textContent = `"${query}" 검색 결과`;
+          dom.searchListTarget.innerHTML = `<p style="color:var(--text-muted); padding:1rem;">검색 중...</p>`;
+          dom.searchLoadMoreBtn.style.display = "none";
+          switchPanel("pane-search");
+        } else {
+          dom.searchLoadMoreBtn.textContent = "불러오는 중...";
+        }
+
         if (!STATE.apiKey) {
-          // Demo fallback search simulator regex lookup filter
           const matched = CORE_DATABASE.all.filter(t => 
             t.title.toLowerCase().includes(query.toLowerCase()) || 
             t.channelTitle.toLowerCase().includes(query.toLowerCase())
           );
-          dom.recommendTitle.textContent = `"${query}" 검색 결과 (데모 데이터)`;
-          renderQuickPicks(matched);
+          dom.searchTitle.textContent = `"${query}" 검색 결과 (데모 데이터)`;
+          STATE.currentSearchTracks = matched;
+          renderSearchResults();
           return;
         }
 
         try {
-          // Append specific keyword modifiers to enforce highest fidelity music streams matching
           const optimizationQuery = `${query} official audio topic`;
-          const data = await callYoutubeApi("search", {
-            part: "snippet",
-            q: optimizationQuery,
-            type: "video",
-            videoCategoryId: "10", // Strictly Music category constraint filter
-            maxResults: "12"
-          });
+          const params = {
+            part: "snippet", q: optimizationQuery, type: "video", videoCategoryId: "10", maxResults: "50" 
+          };
+
+          if (isLoadMore && STATE.searchNextPageToken) params.pageToken = STATE.searchNextPageToken;
+
+          const data = await callYoutubeApi("search", params);
+          STATE.searchNextPageToken = data.nextPageToken || "";
 
           const dynamicTracks = data.items.map(item => ({
-            id: item.id.videoId,
-            title: cleanTrackTitle(item.snippet.title),
-            channelTitle: item.snippet.channelTitle
+            id: item.id.videoId, title: cleanTrackTitle(item.snippet.title), channelTitle: item.snippet.channelTitle
           })).filter(t => t.id);
 
-          dom.recommendTitle.textContent = `"${query}" 검색 결과`;
-          renderQuickPicks(dynamicTracks);
-          switchPanel("pane-home");
+          STATE.currentSearchTracks.push(...dynamicTracks);
+          renderSearchResults();
+
+          if (STATE.searchNextPageToken) {
+            dom.searchLoadMoreBtn.style.display = "block";
+            dom.searchLoadMoreBtn.textContent = "결과 더 보기 ▽";
+          } else {
+            dom.searchLoadMoreBtn.style.display = "none";
+          }
         } catch (e) {
           console.error(e);
           triggerToast("검색 도중 에러가 발생했습니다.");
+          if (isLoadMore) dom.searchLoadMoreBtn.textContent = "결과 더 보기 ▽";
         }
       }
 
-      async function renderHomeFeeds() {
+      function renderSearchResults() {
+        if (!STATE.currentSearchTracks.length) {
+          dom.searchListTarget.innerHTML = `<p style="color:var(--text-muted); padding:1rem;">검색 결과가 없습니다.</p>`;
+          return;
+        }
+
+        dom.searchListTarget.innerHTML = STATE.currentSearchTracks.map((track, idx) => `
+          <div class="table-row" data-id="${track.id}" data-index="${idx}">
+            <span style="font-size:0.8rem; color:var(--text-muted); width:20px;">${idx + 1}</span>
+            <img src="https://i.ytimg.com/vi/${track.id}/mqdefault.jpg" style="width:40px; height:40px; object-fit:cover; border-radius:4px;">
+            <div style="flex:1; min-width:0;">
+              <div class="qp-title row-song-title">${track.title}</div>
+              <div class="qp-artist">${track.channelTitle}</div>
+            </div>
+            <button type="button" class="inline-add-btn" data-id="${track.id}" style="right: 1rem;" title="재생목록에 추가">＋</button>
+          </div>
+        `).join("");
+
+        bindTrackEvents(dom.searchListTarget, STATE.currentSearchTracks);
+        highlightActiveElementsGlobal();
+      }
+
+      // 홈 화면 무한 로딩
+      async function renderHomeFeeds(isLoadMore = false) {
         const pool = CORE_DATABASE[STATE.currentMood] || CORE_DATABASE.all;
         
+        if (!isLoadMore) {
+            STATE.homeRecommendTracks = [];
+            STATE.homeNextPageToken = "";
+            dom.homeLoadMoreBtn.style.display = "none";
+        } else {
+            dom.homeLoadMoreBtn.textContent = "불러오는 중...";
+        }
+
         if (STATE.apiKey) {
           try {
-            // YouTube Music Style real-time trend mining matrix fetch sequence
             const queryMap = { all: "인기 얼터너티브 가요", energy: "신나는 케이팝 댄스 트랙", chill: "감성 인디 발라드", focus: "공부할때 듣는 로파이", romance: "달달한 알앤비 고백송" };
             const searchQueryStr = queryMap[STATE.currentMood] || "Kpop Music Latest Hits";
             
-            const data = await callYoutubeApi("search", {
-              part: "snippet",
-              q: searchQueryStr,
-              type: "video",
-              videoCategoryId: "10",
-              maxResults: "16"
-            });
+            const params = {
+              part: "snippet", q: searchQueryStr, type: "video", videoCategoryId: "10", maxResults: "40"
+            };
+
+            if (isLoadMore && STATE.homeNextPageToken) params.pageToken = STATE.homeNextPageToken;
+
+            const data = await callYoutubeApi("search", params);
+            STATE.homeNextPageToken = data.nextPageToken || "";
 
             const parsed = data.items.map(item => ({
-              id: item.id.videoId,
-              title: cleanTrackTitle(item.snippet.title),
-              channelTitle: item.snippet.channelTitle
+              id: item.id.videoId, title: cleanTrackTitle(item.snippet.title), channelTitle: item.snippet.channelTitle
             })).filter(t => t.id);
 
             dom.recommendTitle.textContent = STATE.currentMood === "all" ? "빠른 선곡" : "맞춤형 추천 트랙";
-            renderQuickPicks(parsed.slice(0, 8));
-            renderRecommendGrid(parsed.slice(8));
+            
+            // 첫 로드일때는 빠른선곡 영역과 추천믹스 영역을 나눠서 그림
+            if (!isLoadMore) {
+                renderQuickPicks(parsed.slice(0, 8));
+                STATE.homeRecommendTracks = parsed.slice(8);
+                renderRecommendGrid(STATE.homeRecommendTracks);
+            } else {
+                STATE.homeRecommendTracks.push(...parsed);
+                renderRecommendGrid(STATE.homeRecommendTracks);
+            }
+
+            if (STATE.homeNextPageToken) {
+              dom.homeLoadMoreBtn.style.display = "block";
+              dom.homeLoadMoreBtn.textContent = "추천 곡 더 보기 ▽";
+            } else {
+              dom.homeLoadMoreBtn.style.display = "none";
+            }
             return;
           } catch (e) {
-            console.error("Quota exceeded or validation failure. Engaging fallback engine core.");
+            console.error("Quota exceeded or validation failure.");
           }
         }
 
-        // Demo Fallback Render Pipeline
+        // 데모 환경
         dom.recommendTitle.textContent = "빠른 선곡";
         renderQuickPicks(pool);
         renderRecommendGrid(CORE_DATABASE.all);
       }
 
       function renderQuickPicks(tracks) {
-        if (!tracks.length) {
-          dom.quickPicksGrid.innerHTML = `<p style="color:var(--text-muted); padding:1rem;">검색 결과가 없습니다.</p>`;
-          return;
-        }
+        if (!tracks.length) return;
         dom.quickPicksGrid.innerHTML = tracks.map((track, idx) => `
           <div class="quick-pick-item" data-id="${track.id}" data-index="${idx}">
             <img class="qp-thumbnail" src="https://i.ytimg.com/vi/${track.id}/mqdefault.jpg">
@@ -1426,21 +1401,7 @@
             <button type="button" class="inline-add-btn" data-id="${track.id}" title="재생목록에 추가">＋</button>
           </div>
         `).join("");
-
-        dom.quickPicksGrid.querySelectorAll(".quick-pick-item").forEach(el => {
-          el.addEventListener("click", (e) => {
-            if (e.target.classList.contains('inline-add-btn')) return;
-            setPlaylistContextAndPlay(tracks, el.dataset.id, el.dataset.index);
-          });
-        });
-
-        dom.quickPicksGrid.querySelectorAll(".inline-add-btn").forEach(btn => {
-          btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const trackObj = tracks.find(t => t.id === btn.dataset.id);
-            openPlaylistModal(trackObj);
-          });
-        });
+        bindTrackEvents(dom.quickPicksGrid, tracks);
       }
 
       function renderRecommendGrid(tracks) {
@@ -1457,21 +1418,8 @@
             <div class="card-artist">${track.channelTitle}</div>
           </div>
         `).join("");
-
-        dom.recommendGrid.querySelectorAll(".music-square-card").forEach(el => {
-          el.addEventListener("click", (e) => {
-            if (e.target.classList.contains('card-add-overlay-btn')) return;
-            setPlaylistContextAndPlay(tracks, el.dataset.id, el.dataset.index);
-          });
-        });
-
-        dom.recommendGrid.querySelectorAll(".card-add-overlay-btn").forEach(btn => {
-          btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const trackObj = tracks.find(t => t.id === btn.dataset.id);
-            openPlaylistModal(trackObj);
-          });
-        });
+        bindTrackEvents(dom.recommendGrid, tracks, true);
+        highlightActiveElementsGlobal();
       }
 
       function updateLikedListView() {
@@ -1489,21 +1437,7 @@
             <button type="button" class="inline-add-btn" data-id="${t.id}" style="right: 1rem;" title="다른 재생목록에 추가">＋</button>
           </div>
         `).join("");
-
-        dom.likedTable.querySelectorAll(".table-row").forEach(el => {
-          el.addEventListener("click", (e) => {
-            if (e.target.classList.contains('inline-add-btn')) return;
-            setPlaylistContextAndPlay(STATE.likedTracks, el.dataset.id, el.dataset.index);
-          });
-        });
-
-        dom.likedTable.querySelectorAll(".inline-add-btn").forEach(btn => {
-          btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const trackObj = STATE.likedTracks.find(t => t.id === btn.dataset.id);
-            openPlaylistModal(trackObj);
-          });
-        });
+        bindTrackEvents(dom.likedTable, STATE.likedTracks);
       }
 
       function updateHistoryListView() {
@@ -1523,24 +1457,9 @@
             <div class="card-artist">${t.channelTitle}</div>
           </div>
         `).join("");
-
-        dom.historyGrid.querySelectorAll(".music-square-card").forEach(el => {
-          el.addEventListener("click", (e) => {
-            if (e.target.classList.contains('card-add-overlay-btn')) return;
-            setPlaylistContextAndPlay(STATE.historyTracks, el.dataset.id, el.dataset.index);
-          });
-        });
-
-        dom.historyGrid.querySelectorAll(".card-add-overlay-btn").forEach(btn => {
-          btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const trackObj = STATE.historyTracks.find(t => t.id === btn.dataset.id);
-            openPlaylistModal(trackObj);
-          });
-        });
+        bindTrackEvents(dom.historyGrid, STATE.historyTracks, true);
       }
 
-      // Render Created Custom Playlists Container
       function updateCustomPlaylistsView() {
         const keys = Object.keys(STATE.customPlaylists);
         if (!keys.length) {
@@ -1580,7 +1499,6 @@
           `;
         }).join("");
 
-        // Bind events for custom playlists
         dom.playlistsContainer.querySelectorAll(".table-row").forEach(el => {
           el.addEventListener("click", (e) => {
             if (e.target.classList.contains('remove-from-pl-btn')) return;
@@ -1613,17 +1531,30 @@
         });
       }
 
-      // Custom Playlist Core Logics
+      function bindTrackEvents(container, trackList, isCard = false) {
+        const itemClass = isCard ? ".music-square-card" : ".quick-pick-item, .table-row";
+        const btnClass = isCard ? ".card-add-overlay-btn" : ".inline-add-btn";
+
+        container.querySelectorAll(itemClass).forEach(el => {
+          el.addEventListener("click", (e) => {
+            if (e.target.classList.contains(btnClass.substring(1))) return;
+            setPlaylistContextAndPlay(trackList, el.dataset.id, el.dataset.index);
+          });
+        });
+
+        container.querySelectorAll(btnClass).forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const trackObj = trackList.find(t => t.id === btn.dataset.id);
+            openPlaylistModal(trackObj);
+          });
+        });
+      }
+
       function createNewPlaylist() {
         const name = dom.createPlaylistInput.value.trim();
-        if (!name) {
-          triggerToast("재생목록 이름을 입력해주세요.");
-          return;
-        }
-        if (STATE.customPlaylists[name]) {
-          triggerToast("이미 존재하는 재생목록 이름입니다.");
-          return;
-        }
+        if (!name) return triggerToast("재생목록 이름을 입력해주세요.");
+        if (STATE.customPlaylists[name]) return triggerToast("이미 존재하는 재생목록 이름입니다.");
         STATE.customPlaylists[name] = [];
         localStorage.setItem("aura_ym_custom_pls", JSON.stringify(STATE.customPlaylists));
         dom.createPlaylistInput.value = "";
@@ -1649,18 +1580,13 @@
               dom.deckLikeBtn.classList.add("active");
               dom.deckLikeBtn.textContent = "♥";
             }
-          } else {
-            triggerToast("이미 좋아요 한 음악에 존재합니다.");
-          }
+          } else { triggerToast("이미 좋아요 한 음악에 존재합니다."); }
           return;
         }
 
         const list = STATE.customPlaylists[name];
         if (list) {
-          if (list.some(t => t.id === track.id)) {
-            triggerToast("이미 재생목록에 존재하는 곡입니다.");
-            return;
-          }
+          if (list.some(t => t.id === track.id)) return triggerToast("이미 재생목록에 존재하는 곡입니다.");
           list.push(track);
           localStorage.setItem("aura_ym_custom_pls", JSON.stringify(STATE.customPlaylists));
           updateCustomPlaylistsView();
@@ -1677,19 +1603,12 @@
         }
       }
 
-      // Modal Triggers
       function openPlaylistModal(track) {
         STATE.pendingModalTrack = track;
-        
-        let optionsHtml = `
-          <button type="button" class="modal-playlist-btn" data-target="liked_bucket_builtin">💖 좋아요 한 음악</button>
-        `;
-        
-        const keys = Object.keys(STATE.customPlaylists);
-        keys.forEach(k => {
+        let optionsHtml = `<button type="button" class="modal-playlist-btn" data-target="liked_bucket_builtin">💖 좋아요 한 음악</button>`;
+        Object.keys(STATE.customPlaylists).forEach(k => {
           optionsHtml += `<button type="button" class="modal-playlist-btn" data-target="${k}">📁 ${k}</button>`;
         });
-
         dom.modalPlaylistsBucket.innerHTML = optionsHtml;
         dom.playlistModal.classList.add("active-modal");
 
@@ -1706,7 +1625,6 @@
         STATE.pendingModalTrack = null;
       }
 
-      // Playlist Sync Logic (인덱스 식별값 옵션을 지원하도록 고도화)
       function setPlaylistContextAndPlay(tracksPool, targetTrackId, targetIndex) {
         STATE.playbackQueue = [...tracksPool];
         if (targetIndex !== undefined && targetIndex !== null) {
@@ -1718,7 +1636,6 @@
         if (STATE.shuffleActive) {
           STATE.preShuffleQueue = [...tracksPool];
           const currentTrack = STATE.playbackQueue[STATE.currentQueueIndex];
-          // Extrude active playing index to absolute index zero position anchor point setup
           STATE.playbackQueue.splice(STATE.currentQueueIndex, 1);
           for (let i = STATE.playbackQueue.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -1735,10 +1652,8 @@
         const track = STATE.playbackQueue[STATE.currentQueueIndex];
         if (!track) return;
 
-        // If the track ID is not an 11-char YouTube ID, it's a Melon track that needs resolution
         const isYtId = /^[a-zA-Z0-9_-]{11}$/.test(track.id);
         
-        // Show loading status in the deck
         dom.deckName.textContent = "로딩 중...";
         dom.deckArtist.textContent = track.artist || track.channelTitle || "";
         dom.deckArt.src = track.albumArt || `https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`;
@@ -1757,7 +1672,7 @@
               const resData = await res.json();
               if (resData.success && resData.videoId) {
                 ytVideoId = resData.videoId;
-                track.ytId = ytVideoId; // Cache on track object
+                track.ytId = ytVideoId;
               } else {
                 triggerToast("YouTube에서 곡을 찾을 수 없습니다.");
                 dom.deckName.textContent = "재생 실패";
@@ -1772,14 +1687,12 @@
           }
         }
 
-        // Sync Metadata Display elements UI
         dom.deckName.textContent = track.title;
         dom.deckArtist.textContent = track.artist || track.channelTitle || "알 수 없음";
         dom.deckArt.src = track.albumArt || `https://i.ytimg.com/vi/${ytVideoId}/mqdefault.jpg`;
         dom.deckArt.style.opacity = "1";
         dom.deckPlayBtn.disabled = false;
 
-        // Toggle Like State active status indicator glow
         const isLiked = STATE.likedTracks.some(t => t.id === track.id);
         dom.deckLikeBtn.classList.toggle("active", isLiked);
         dom.deckLikeBtn.textContent = isLiked ? "♥" : "♡";
@@ -1789,15 +1702,30 @@
           STATE.playerEngine.playVideo();
         }
 
-        // Add to history list array stack handling duplicates asynchronously
         STATE.historyTracks = [track, ...STATE.historyTracks.filter(t => t.id !== track.id)];
         localStorage.setItem("aura_ym_history", JSON.stringify(STATE.historyTracks));
         updateHistoryListView();
         
         renderQueuePanelListView();
-        updateLyricsView(); // 곡이 바뀔 때 가사뷰를 실시간 리로드 처리
+        updateLyricsView();
         highlightActiveElementsGlobal();
         startTimelineTracker();
+
+        // [핵심] Media Session API 연동: 백그라운드 재생 시 잠금화면 컨트롤 활성화
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: track.title,
+            artist: track.artist || track.channelTitle || 'Aura Music',
+            artwork: [
+              { src: track.albumArt || `https://i.ytimg.com/vi/${ytVideoId}/mqdefault.jpg`, sizes: '320x180', type: 'image/jpeg' }
+            ]
+          });
+          
+          navigator.mediaSession.setActionHandler('play', () => STATE.playerEngine.playVideo());
+          navigator.mediaSession.setActionHandler('pause', () => STATE.playerEngine.pauseVideo());
+          navigator.mediaSession.setActionHandler('previoustrack', () => skipPrevTrack());
+          navigator.mediaSession.setActionHandler('nexttrack', () => skipNextTrack());
+        }
       }
 
       function startTimelineTracker() {
@@ -1841,38 +1769,26 @@
         const currentTrack = STATE.playbackQueue[STATE.currentQueueIndex];
         if (!currentTrack) return;
         document.querySelectorAll(".table-row, .quick-pick-item, .music-square-card").forEach(el => {
-          if (el.dataset.id === currentTrack.id) {
-            el.classList.add("active-playing");
-          } else {
-            el.classList.remove("active-playing");
-          }
+          if (el.dataset.id === currentTrack.id) { el.classList.add("active-playing"); } 
+          else { el.classList.remove("active-playing"); }
         });
       }
 
       function skipNextTrack() {
         if (!STATE.playbackQueue.length) return;
-        
-        if (STATE.repeatMode === "one") {
-          executeTrackPlayback();
-          return;
-        }
-
+        if (STATE.repeatMode === "one") { executeTrackPlayback(); return; }
         STATE.currentQueueIndex++;
-        
         if (STATE.currentQueueIndex >= STATE.playbackQueue.length) {
           STATE.currentQueueIndex = 0; 
           triggerToast("재생목록이 끝나 처음 곡부터 다시 재생합니다.");
         }
-        
         executeTrackPlayback();
       }
 
       function skipPrevTrack() {
         if (!STATE.playbackQueue.length) return;
         STATE.currentQueueIndex--;
-        if (STATE.currentQueueIndex < 0) {
-          STATE.currentQueueIndex = STATE.playbackQueue.length - 1;
-        }
+        if (STATE.currentQueueIndex < 0) { STATE.currentQueueIndex = STATE.playbackQueue.length - 1; }
         executeTrackPlayback();
       }
 
@@ -1880,19 +1796,14 @@
         dom.navItems.forEach(btn => btn.classList.toggle("active", btn.dataset.target === targetPaneId));
         dom.viewPanes.forEach(pane => pane.classList.toggle("active", pane.id === targetPaneId));
         
-        // 차트 메뉴 진입 시 Top 100 함수 호출 처리
-        if (targetPaneId === "pane-top100") {
-          renderTop100View();
-        }
+        if (targetPaneId === "pane-top100") renderTop100View();
       }
 
       function initCoreEventListeners() {
-        // Navigation system handling
         dom.navItems.forEach(item => {
           item.addEventListener("click", () => switchPanel(item.dataset.target));
         });
 
-        // Mood filter actions routing logic
         dom.moodChips.forEach(chip => {
           chip.addEventListener("click", () => {
             dom.moodChips.forEach(c => c.classList.remove("active"));
@@ -1902,24 +1813,28 @@
           });
         });
 
-        // Search action dispatch routing logic interface binding
         dom.searchField.addEventListener("keydown", (e) => {
           if (e.key === "Enter") dispatchSearch(dom.searchField.value);
         });
 
-        // Custom playlist creators trigger
+        dom.searchLoadMoreBtn.addEventListener("click", () => {
+          dispatchSearch(STATE.currentSearchQuery, true);
+        });
+        
+        dom.homeLoadMoreBtn.addEventListener("click", () => {
+          renderHomeFeeds(true);
+        });
+
         dom.createPlaylistBtn.addEventListener("click", createNewPlaylist);
         dom.createPlaylistInput.addEventListener("keydown", (e) => {
           if (e.key === "Enter") createNewPlaylist();
         });
 
-        // Modal triggers
         dom.modalCloseBtn.addEventListener("click", closePlaylistModal);
         dom.playlistModal.addEventListener("click", (e) => {
           if(e.target === dom.playlistModal) closePlaylistModal();
         });
 
-        // Saving Authentication API Token Storage Sequence Task
         dom.saveKeyBtn.addEventListener("click", () => {
           const val = dom.apiKeyInput.value.trim();
           localStorage.setItem("aura_ym_key", val);
@@ -1928,21 +1843,16 @@
           renderHomeFeeds();
         });
 
-        // Play/Pause structural control trigger block
         dom.deckPlayBtn.addEventListener("click", () => {
           if (!STATE.isEngineReady) return;
           const status = STATE.playerEngine.getPlayerState();
-          if (status === 1) {
-            STATE.playerEngine.pauseVideo();
-          } else {
-            STATE.playerEngine.playVideo();
-          }
+          if (status === 1) { STATE.playerEngine.pauseVideo(); } 
+          else { STATE.playerEngine.playVideo(); }
         });
 
         dom.deckNextBtn.addEventListener("click", skipNextTrack);
         dom.deckPrevBtn.addEventListener("click", skipPrevTrack);
 
-        // Core interactive rail seek execution calculation sequence logic
         dom.deckProgressRail.addEventListener("click", (e) => {
           if (!STATE.isEngineReady || !STATE.playerEngine.getDuration) return;
           const rect = dom.deckProgressRail.getBoundingClientRect();
@@ -1951,14 +1861,12 @@
           STATE.playerEngine.seekTo(targetSec, true);
         });
 
-        // Master Volume Adjustment Slide event listener logic routing
         dom.deckVolume.addEventListener("input", () => {
           if (STATE.isEngineReady && STATE.playerEngine.setVolume) {
             STATE.playerEngine.setVolume(dom.deckVolume.value);
           }
         });
 
-        // Like Button Event Registration
         dom.deckLikeBtn.addEventListener("click", () => {
           const track = STATE.playbackQueue[STATE.currentQueueIndex];
           if (!track) return;
@@ -1979,14 +1887,12 @@
           dom.deckLikeBtn.textContent = isLiked ? "♥" : "♡";
         });
 
-        // Shuffle Mode Toggle Event Engine Block registration routine setup
         dom.deckShuffleBtn.addEventListener("click", () => {
           STATE.shuffleActive = !STATE.shuffleActive;
           dom.deckShuffleBtn.classList.toggle("active", STATE.shuffleActive);
           triggerToast(STATE.shuffleActive ? "셔플 모드가 켜졌습니다." : "셔플 모드가 꺼졌습니다.");
         });
 
-        // Repeat Mode Switch Cycle Configuration Array Loop
         dom.deckRepeatBtn.addEventListener("click", () => {
           if (STATE.repeatMode === "none") {
             STATE.repeatMode = "all";
@@ -2006,20 +1912,14 @@
           }
         });
 
-        // Side Queue Toggle Window Open/Close Dispatch Action Router
         dom.queueToggleBtn.addEventListener("click", () => {
           dom.queueDrawer.classList.toggle("open");
-          if (dom.queueDrawer.classList.contains("open")) {
-            dom.lyricsDrawer.classList.remove("open");
-          }
+          if (dom.queueDrawer.classList.contains("open")) { dom.lyricsDrawer.classList.remove("open"); }
         });
 
-        // 가사 토글 이벤트 핸들러 인터페이스 연동 (상호 닫기 최적화)
         dom.lyricsToggleBtn.addEventListener("click", () => {
           dom.lyricsDrawer.classList.toggle("open");
-          if (dom.lyricsDrawer.classList.contains("open")) {
-            dom.queueDrawer.classList.remove("open");
-          }
+          if (dom.lyricsDrawer.classList.contains("open")) { dom.queueDrawer.classList.remove("open"); }
         });
       }
 
@@ -2035,23 +1935,20 @@
               STATE.playerEngine.setVolume(dom.deckVolume.value);
             },
             onStateChange: (e) => {
-              // Track playback icon symbol visual synchronization updates handling routine
               if (e.data === YT.PlayerState.PLAYING) {
                 dom.deckPlayIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
               } else {
                 dom.deckPlayIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
               }
 
-              // Automatically trigger sequential track progression condition validation execution routing tasks
-              if (e.data === YT.PlayerState.ENDED) {
-                skipNextTrack();
-              }
+              if (e.data === YT.PlayerState.ENDED) { skipNextTrack(); }
             }
           }
         });
       };
 
-      // Asynchronously instantiate frame pipeline infrastructure loading tasks
       const scriptNode = document.createElement("script");
       scriptNode.src = "https://www.youtube.com/iframe_api";
       const anchor = document.getElementsByTagName("script")[0];
