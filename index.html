@@ -307,6 +307,36 @@
       transform: translateY(-50%) scale(1.1);
     }
 
+    /* 대기열 재정렬 버튼 스타일 */
+    .queue-reorder-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 6;
+    }
+
+    .queue-move-btn {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #ccc;
+      width: 24px;
+      height: 20px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .queue-move-btn:hover {
+      background: rgba(255,255,255,0.3);
+      color: #fff;
+    }
+
     .yt-cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -480,7 +510,7 @@
 
     .deck-control-actions {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.2rem;
     }
 
     .icon-action-btn {
@@ -490,6 +520,7 @@
       cursor: pointer;
       padding: 0.4rem;
       border-radius: 50%;
+      font-size: 1.1rem;
     }
 
     .icon-action-btn:hover, .icon-action-btn.active {
@@ -693,7 +724,6 @@
       transform: translateX(-50%) translateY(0);
     }
 
-    /* 공용 무한 로딩 버튼 디자인 */
     .load-more-btn {
       display: none;
       width: 100%;
@@ -713,9 +743,6 @@
       border-color: rgba(255,255,255,0.3);
     }
 
-    /* ==========================================================================
-       모바일 및 태블릿 최적화 반응형 레이아웃 (PC 기능 100% 유지)
-       ========================================================================== */
     @media (max-width: 768px) {
       body { overflow: hidden; }
       
@@ -932,6 +959,8 @@
         <div class="qp-artist" id="deck-artist-name">Aura Player Engine</div>
       </div>
       <div class="deck-control-actions">
+        <!-- 현재 곡을 즉시 재생목록에 추가하는 버튼 신설 -->
+        <button type="button" class="icon-action-btn" id="deck-add-btn" title="재생목록에 추가">＋</button>
         <button type="button" class="icon-action-btn" id="deck-like-btn" title="좋아요">♥</button>
       </div>
     </div>
@@ -984,7 +1013,8 @@
 
   <div class="alert-toast-popup" id="app-toast-alert-box">알림 메시지</div>
 
-  <div style="position:absolute; visibility:hidden; width:0; height:0; pointer-events:none;">
+  <!-- [중요 변경 사항] 백그라운드 재생 시 차단되지 않도록 1px로 유지하되 투명하게 은폐 -->
+  <div style="position:absolute; width:1px; height:1px; opacity:0.001; pointer-events:none; left:-9999px;">
     <div id="youtube-iframe-hardware-engine"></div>
   </div>
 
@@ -1045,12 +1075,10 @@
         preShuffleQueue: [],
         pendingModalTrack: null,
         
-        // 검색 페이지 무한 로딩 상태 관리
         currentSearchQuery: "",
         searchNextPageToken: "",
         currentSearchTracks: [],
         
-        // 홈 화면 무한 로딩 상태 관리
         homeNextPageToken: "",
         homeRecommendTracks: []
       };
@@ -1065,7 +1093,7 @@
         historyGrid: document.getElementById("history-grid-target"),
         quickPicksGrid: document.getElementById("quick-picks-target"),
         recommendGrid: document.getElementById("home-recommend-grid-target"),
-        homeLoadMoreBtn: document.getElementById("home-load-more-btn"), // 홈 무한 스크롤
+        homeLoadMoreBtn: document.getElementById("home-load-more-btn"),
         
         likedTable: document.getElementById("library-liked-target"),
         playlistsContainer: document.getElementById("library-playlists-container"),
@@ -1083,6 +1111,7 @@
         deckPrevBtn: document.getElementById("deck-prev-btn"),
         deckNextBtn: document.getElementById("deck-next-btn"),
         deckLikeBtn: document.getElementById("deck-like-btn"),
+        deckAddBtn: document.getElementById("deck-add-btn"), // 하단 추가 버튼
         deckShuffleBtn: document.getElementById("deck-shuffle-btn"),
         deckRepeatBtn: document.getElementById("deck-repeat-btn"),
         
@@ -1247,7 +1276,6 @@
           });
       }
 
-      // 검색 무한 로딩
       async function dispatchSearch(query, isLoadMore = false) {
         if (!query.trim()) {
           switchPanel("pane-home");
@@ -1278,10 +1306,7 @@
 
         try {
           const optimizationQuery = `${query} official audio topic`;
-          const params = {
-            part: "snippet", q: optimizationQuery, type: "video", videoCategoryId: "10", maxResults: "50" 
-          };
-
+          const params = { part: "snippet", q: optimizationQuery, type: "video", videoCategoryId: "10", maxResults: "50" };
           if (isLoadMore && STATE.searchNextPageToken) params.pageToken = STATE.searchNextPageToken;
 
           const data = await callYoutubeApi("search", params);
@@ -1301,7 +1326,6 @@
             dom.searchLoadMoreBtn.style.display = "none";
           }
         } catch (e) {
-          console.error(e);
           triggerToast("검색 도중 에러가 발생했습니다.");
           if (isLoadMore) dom.searchLoadMoreBtn.textContent = "결과 더 보기 ▽";
         }
@@ -1329,27 +1353,43 @@
         highlightActiveElementsGlobal();
       }
 
-      // 홈 화면 무한 로딩
+      // [기능 3] 나를 위한 맞춤 추천 기능 적용 (시청 기록 기반)
       async function renderHomeFeeds(isLoadMore = false) {
-        const pool = CORE_DATABASE[STATE.currentMood] || CORE_DATABASE.all;
+        let pool = CORE_DATABASE[STATE.currentMood] || CORE_DATABASE.all;
+        let searchQueryStr = "Kpop Music Latest Hits";
+        let shelfTitleText = "빠른 선곡";
+
+        // 기록 기반 추천 로직 (전체 모드일 때 발동)
+        if (STATE.currentMood === "all" && STATE.historyTracks.length > 0) {
+            const favoriteArtist = STATE.historyTracks[0].channelTitle || STATE.historyTracks[0].artist;
+            if (favoriteArtist) {
+                searchQueryStr = `${favoriteArtist} 노래 추천`;
+                shelfTitleText = `'${favoriteArtist}' 좋아하시나요? 맞춤 추천`;
+                
+                // 데모 모드를 위해 기록에 있는 아티스트와 일치하는 트랙을 상단에 띄움
+                if (!STATE.apiKey) {
+                    const matched = CORE_DATABASE.all.filter(t => t.channelTitle === favoriteArtist);
+                    pool = matched.length > 0 ? [...matched, ...CORE_DATABASE.all.filter(t => t.channelTitle !== favoriteArtist)] : pool;
+                }
+            }
+        } else if (STATE.currentMood !== "all") {
+            const queryMap = { energy: "신나는 케이팝 댄스 트랙", chill: "감성 인디 발라드", focus: "공부할때 듣는 로파이", romance: "달달한 알앤비 고백송" };
+            searchQueryStr = queryMap[STATE.currentMood];
+            shelfTitleText = "맞춤형 추천 트랙";
+        }
         
         if (!isLoadMore) {
             STATE.homeRecommendTracks = [];
             STATE.homeNextPageToken = "";
             dom.homeLoadMoreBtn.style.display = "none";
+            dom.recommendTitle.textContent = shelfTitleText;
         } else {
             dom.homeLoadMoreBtn.textContent = "불러오는 중...";
         }
 
         if (STATE.apiKey) {
           try {
-            const queryMap = { all: "인기 얼터너티브 가요", energy: "신나는 케이팝 댄스 트랙", chill: "감성 인디 발라드", focus: "공부할때 듣는 로파이", romance: "달달한 알앤비 고백송" };
-            const searchQueryStr = queryMap[STATE.currentMood] || "Kpop Music Latest Hits";
-            
-            const params = {
-              part: "snippet", q: searchQueryStr, type: "video", videoCategoryId: "10", maxResults: "40"
-            };
-
+            const params = { part: "snippet", q: searchQueryStr, type: "video", videoCategoryId: "10", maxResults: "40" };
             if (isLoadMore && STATE.homeNextPageToken) params.pageToken = STATE.homeNextPageToken;
 
             const data = await callYoutubeApi("search", params);
@@ -1358,10 +1398,7 @@
             const parsed = data.items.map(item => ({
               id: item.id.videoId, title: cleanTrackTitle(item.snippet.title), channelTitle: item.snippet.channelTitle
             })).filter(t => t.id);
-
-            dom.recommendTitle.textContent = STATE.currentMood === "all" ? "빠른 선곡" : "맞춤형 추천 트랙";
             
-            // 첫 로드일때는 빠른선곡 영역과 추천믹스 영역을 나눠서 그림
             if (!isLoadMore) {
                 renderQuickPicks(parsed.slice(0, 8));
                 STATE.homeRecommendTracks = parsed.slice(8);
@@ -1374,17 +1411,15 @@
             if (STATE.homeNextPageToken) {
               dom.homeLoadMoreBtn.style.display = "block";
               dom.homeLoadMoreBtn.textContent = "추천 곡 더 보기 ▽";
-            } else {
-              dom.homeLoadMoreBtn.style.display = "none";
-            }
+            } else { dom.homeLoadMoreBtn.style.display = "none"; }
             return;
           } catch (e) {
-            console.error("Quota exceeded or validation failure.");
+            console.error("API Error");
           }
         }
 
-        // 데모 환경
-        dom.recommendTitle.textContent = "빠른 선곡";
+        // 데모 환경 (API 키 없을 때)
+        dom.recommendTitle.textContent = shelfTitleText + " (데모)";
         renderQuickPicks(pool);
         renderRecommendGrid(CORE_DATABASE.all);
       }
@@ -1648,6 +1683,16 @@
         executeTrackPlayback();
       }
 
+      // [기능 2] 시스템 미디어 세션(잠금화면 제어)을 셋업하는 함수
+      function setupMediaSessionActions() {
+        if (!('mediaSession' in navigator)) return;
+        
+        navigator.mediaSession.setActionHandler('play', () => { if(STATE.isEngineReady) STATE.playerEngine.playVideo(); });
+        navigator.mediaSession.setActionHandler('pause', () => { if(STATE.isEngineReady) STATE.playerEngine.pauseVideo(); });
+        navigator.mediaSession.setActionHandler('previoustrack', () => skipPrevTrack());
+        navigator.mediaSession.setActionHandler('nexttrack', () => skipNextTrack());
+      }
+
       async function executeTrackPlayback() {
         const track = STATE.playbackQueue[STATE.currentQueueIndex];
         if (!track) return;
@@ -1679,7 +1724,6 @@
                 return;
               }
             } catch (e) {
-              console.error(e);
               triggerToast("YouTube 연동 중 오류가 발생했습니다.");
               dom.deckName.textContent = "재생 실패";
               return;
@@ -1711,20 +1755,18 @@
         highlightActiveElementsGlobal();
         startTimelineTracker();
 
-        // [핵심] Media Session API 연동: 백그라운드 재생 시 잠금화면 컨트롤 활성화
+        // [기능 2] 잠금화면에 곡 제목 및 표지 이미지 반영
         if ('mediaSession' in navigator) {
           navigator.mediaSession.metadata = new MediaMetadata({
             title: track.title,
             artist: track.artist || track.channelTitle || 'Aura Music',
+            album: 'Aura Premium',
             artwork: [
-              { src: track.albumArt || `https://i.ytimg.com/vi/${ytVideoId}/mqdefault.jpg`, sizes: '320x180', type: 'image/jpeg' }
+              { src: track.albumArt || `https://i.ytimg.com/vi/${ytVideoId}/mqdefault.jpg`, sizes: '320x180', type: 'image/jpeg' },
+              { src: track.albumArt || `https://i.ytimg.com/vi/${ytVideoId}/hqdefault.jpg`, sizes: '480x360', type: 'image/jpeg' }
             ]
           });
-          
-          navigator.mediaSession.setActionHandler('play', () => STATE.playerEngine.playVideo());
-          navigator.mediaSession.setActionHandler('pause', () => STATE.playerEngine.pauseVideo());
-          navigator.mediaSession.setActionHandler('previoustrack', () => skipPrevTrack());
-          navigator.mediaSession.setActionHandler('nexttrack', () => skipNextTrack());
+          setupMediaSessionActions();
         }
       }
 
@@ -1743,26 +1785,68 @@
         }, 500);
       }
 
+      // [기능 4] 대기열 순서 변경 (모바일에서 안정적인 위/아래 이동 버튼 추가)
       function renderQueuePanelListView() {
         dom.queueListTarget.innerHTML = STATE.playbackQueue.map((track, idx) => {
           const isCurrent = idx === STATE.currentQueueIndex;
           return `
-            <div class="quick-pick-item ${isCurrent ? 'active-playing' : ''}" style="${isCurrent ? 'background:rgba(255,0,51,0.155);' : ''}" data-index="${idx}">
-              <img class="qp-thumbnail" src="https://i.ytimg.com/vi/${track.id}/mqdefault.jpg" style="width:36px; height:36px;">
-              <div class="qp-meta">
+            <div class="quick-pick-item queue-item-row ${isCurrent ? 'active-playing' : ''}" style="${isCurrent ? 'background:rgba(255,0,51,0.155);' : ''}; padding-right:2.5rem;" data-index="${idx}">
+              <img class="qp-thumbnail" src="https://i.ytimg.com/vi/${track.id}/mqdefault.jpg" style="width:36px; height:36px; pointer-events:none;">
+              <div class="qp-meta" style="pointer-events:none;">
                 <div class="qp-title" style="font-size:0.88rem; ${isCurrent ? 'color:var(--accent); font-weight:700;' : ''}">${track.title}</div>
                 <div class="qp-artist" style="font-size:0.75rem;">${track.channelTitle}</div>
+              </div>
+              <div class="queue-reorder-controls">
+                <button type="button" class="queue-move-btn queue-move-up" data-index="${idx}" title="위로 이동">▲</button>
+                <button type="button" class="queue-move-btn queue-move-down" data-index="${idx}" title="아래로 이동">▼</button>
               </div>
             </div>
           `;
         }).join("");
 
-        dom.queueListTarget.querySelectorAll(".quick-pick-item").forEach(el => {
-          el.addEventListener("click", () => {
+        // 트랙 클릭 시 재생 이벤트
+        dom.queueListTarget.querySelectorAll(".queue-item-row").forEach(el => {
+          el.addEventListener("click", (e) => {
+            // 위/아래 버튼 클릭 시 재생되지 않게 막음
+            if (e.target.classList.contains("queue-move-btn")) return;
             STATE.currentQueueIndex = parseInt(el.dataset.index);
             executeTrackPlayback();
           });
         });
+
+        // 위로 이동 버튼 이벤트
+        dom.queueListTarget.querySelectorAll(".queue-move-up").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.dataset.index);
+            if (idx > 0) reorderQueue(idx, idx - 1);
+          });
+        });
+
+        // 아래로 이동 버튼 이벤트
+        dom.queueListTarget.querySelectorAll(".queue-move-down").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.dataset.index);
+            if (idx < STATE.playbackQueue.length - 1) reorderQueue(idx, idx + 1);
+          });
+        });
+      }
+
+      // [기능 4] 대기열 배열 순서 조작 및 인덱스 업데이트
+      function reorderQueue(fromIdx, toIdx) {
+        // 배열 아이템 이동
+        const movedTrack = STATE.playbackQueue.splice(fromIdx, 1)[0];
+        STATE.playbackQueue.splice(toIdx, 0, movedTrack);
+
+        // 현재 재생 중인 곡의 인덱스를 안전하게 추적
+        if (STATE.currentQueueIndex === fromIdx) {
+          STATE.currentQueueIndex = toIdx;
+        } else if (STATE.currentQueueIndex === toIdx) {
+          STATE.currentQueueIndex = fromIdx;
+        }
+
+        renderQueuePanelListView(); // 뷰 업데이트
       }
 
       function highlightActiveElementsGlobal() {
@@ -1853,6 +1937,13 @@
         dom.deckNextBtn.addEventListener("click", skipNextTrack);
         dom.deckPrevBtn.addEventListener("click", skipPrevTrack);
 
+        // [기능 5] 하단 플레이어에 추가한 '+' 버튼 이벤트 (현재 곡을 내 재생목록에 즉시 추가)
+        dom.deckAddBtn.addEventListener("click", () => {
+          const track = STATE.playbackQueue[STATE.currentQueueIndex];
+          if (track) openPlaylistModal(track);
+          else triggerToast("재생 중인 곡이 없습니다.");
+        });
+
         dom.deckProgressRail.addEventListener("click", (e) => {
           if (!STATE.isEngineReady || !STATE.playerEngine.getDuration) return;
           const rect = dom.deckProgressRail.getBoundingClientRect();
@@ -1925,7 +2016,8 @@
 
       window.onYouTubeIframeAPIReady = function() {
         STATE.playerEngine = new YT.Player("youtube-iframe-hardware-engine", {
-          height: "0", width: "0",
+          // [중요] 1x1 픽셀 사이즈로 설정하여 모바일 브라우저의 백그라운드 영상 정지 제재를 회피
+          height: "1", width: "1",
           playerVars: {
             autoplay: 0, controls: 0, disablekb: 1, fs: 0, rel: 0, playsinline: 1, iv_load_policy: 3
           },
