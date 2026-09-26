@@ -46,7 +46,6 @@
       width: 100%;
     }
 
-    /* Sidebar Design */
     .sidebar {
       background-color: var(--bg-sidebar);
       border-right: 1px solid var(--border);
@@ -113,7 +112,6 @@
       font-weight: 700;
     }
 
-    /* Main Content Area */
     .main-viewport {
       display: flex;
       flex-direction: column;
@@ -178,7 +176,6 @@
       display: block;
     }
 
-    /* Mood Filter Chips */
     .mood-chips-container {
       display: flex;
       gap: 0.5rem;
@@ -209,7 +206,6 @@
       font-weight: 600;
     }
 
-    /* Shelves */
     .shelf-section {
       margin-bottom: 2.5rem;
     }
@@ -240,7 +236,7 @@
     .quick-pick-item {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.75rem;
       padding: 0.5rem;
       border-radius: 6px;
       cursor: pointer;
@@ -258,12 +254,13 @@
       border-radius: 4px;
       object-fit: cover;
       background-color: #000;
+      flex-shrink: 0;
     }
 
     .qp-meta {
       flex: 1;
       min-width: 0;
-      padding-right: 2.5rem;
+      padding-right: 1rem;
     }
 
     .qp-title {
@@ -307,32 +304,51 @@
       transform: translateY(-50%) scale(1.1);
     }
 
-    .queue-reorder-controls {
+    .queue-reorder-controls, .playlist-reorder-controls {
       display: flex;
       flex-direction: column;
-      gap: 0.2rem;
-      position: absolute;
-      right: 0.5rem;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 6;
+      gap: 0.15rem;
+      margin-right: 0.5rem;
+      flex-shrink: 0;
     }
 
     .queue-move-btn {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       border: none;
       color: #ccc;
-      width: 24px;
-      height: 20px;
+      width: 22px;
+      height: 18px;
       border-radius: 4px;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       cursor: pointer;
       display: grid;
       place-items: center;
+      transition: background 0.2s, color 0.2s;
     }
 
     .queue-move-btn:hover {
-      background: rgba(255,255,255,0.3);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .remove-from-pl-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #aaa;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    .remove-from-pl-btn:hover {
+      background: var(--accent);
       color: #fff;
     }
 
@@ -443,10 +459,10 @@
     .table-row {
       display: flex;
       align-items: center;
-      padding: 0.6rem 1rem;
-      border-radius: 4px;
+      padding: 0.6rem 0.8rem;
+      border-radius: 6px;
       cursor: pointer;
-      gap: 1rem;
+      gap: 0.75rem;
       position: relative;
     }
 
@@ -479,7 +495,6 @@
       padding-bottom: 0.5rem;
     }
 
-    /* Player Deck */
     .persistent-player-deck {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -487,7 +502,7 @@
       background-color: #1a1a1a;
       border-top: 1px solid rgba(255,255,255,0.05);
       display: grid;
-      grid-template-columns: 300px 1fr 300px;
+      grid-template-columns: 320px 1fr 300px;
       align-items: center;
       padding: 0 1.5rem;
       z-index: 1000;
@@ -505,6 +520,7 @@
       height: 48px;
       border-radius: 4px;
       object-fit: cover;
+      flex-shrink: 0;
     }
 
     .deck-control-actions {
@@ -600,7 +616,6 @@
       gap: 0.75rem;
     }
 
-    /* Modals & Drawers */
     .playlist-modal-popup {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -798,6 +813,7 @@
       cursor: pointer;
       transition: all 0.2s;
     }
+
     .load-more-btn:hover {
       background: rgba(255,255,255,0.15);
       border-color: rgba(255,255,255,0.3);
@@ -1018,6 +1034,7 @@
         <div class="qp-artist" id="deck-artist-name">Aura Player Engine</div>
       </div>
       <div class="deck-control-actions">
+        <button type="button" class="icon-action-btn" id="deck-download-btn" title="현재 곡 direct 음원 다운로드">📥</button>
         <button type="button" class="icon-action-btn" id="deck-add-btn" title="재생목록에 추가">＋</button>
         <button type="button" class="icon-action-btn" id="deck-like-btn" title="좋아요">♥</button>
       </div>
@@ -1085,6 +1102,30 @@
     </div>
   </div>
 
+  <!-- Custom Delete Confirmation Modal -->
+  <div class="playlist-modal-popup" id="delete-confirm-modal">
+    <div class="modal-card" style="text-align:center;">
+      <h3 class="modal-title" style="margin-bottom:0.5rem;">재생목록 삭제</h3>
+      <p id="delete-confirm-msg" style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.25rem;">정말 이 재생목록을 삭제하시겠습니까?</p>
+      <div style="display:flex; gap:0.5rem;">
+        <button type="button" class="modal-close-btn" id="delete-confirm-cancel-btn" style="flex:1;">취소</button>
+        <button type="button" id="delete-confirm-ok-btn" style="flex:1; background:var(--accent); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">삭제하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- In-Page Direct Download Progress Modal -->
+  <div class="playlist-modal-popup" id="download-progress-modal">
+    <div class="modal-card" style="text-align:center;">
+      <div style="font-size:2rem; margin-bottom:0.5rem;" id="download-modal-icon">📥</div>
+      <h3 class="modal-title" id="download-modal-title" style="margin-bottom:0.5rem;">음원 직접 다운로드 중...</h3>
+      <p id="download-modal-status" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">페이지 이동 없이 이 브라우저에서 직접 음원 파일을 추출 및 다운로드합니다.</p>
+      <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+        <div id="download-modal-bar" style="width:15%; height:100%; background:var(--accent); transition:width 0.3s ease;"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="alert-toast-popup" id="app-toast-alert-box">알림 메시지</div>
 
   <div style="position:absolute; width:1px; height:1px; opacity:0.001; pointer-events:none; left:-9999px;">
@@ -1132,7 +1173,6 @@
         ]
       };
 
-      // Built-in K-Pop Lyrics Database Fallback for Instant Loading
       const BUILTIN_LYRICS = {
         "고민중독": `[QWER - 고민중독 (T.B.H)]
 
@@ -1183,63 +1223,7 @@ Day & night, I think about you
 Cause I know what you like boy
 You're my chemical hype boy
 내게만 살짝 보여줘
-네 맘을 다 보여줘`,
-
-        "i am": `[IVE - I AM]
-
-다른 문을 열어 따라와봐
-너는 너대로 나는 나대로
-자유로운 우리들의 날개를 펴
-Life is a beautiful galaxy
-
-Be a writer, the genre is mystery
-내 내일은 더 화려할 테니
-I'll be far away
-That's my life is a beautiful galaxy`,
-
-        "love wins all": `[IU - Love wins all]
-
-Dearest, darling, my universe
-날 끌어안아 줘
-더 멀리 달려가자
-세상의 끝까지 함께 가줘
-
-Comes the end of time
-Love wins all
-우리의 사랑이 모든 것을 이겨낼 테니까`,
-
-        "한 페이지가 될 수 있게": `[DAY6 - 한 페이지가 될 수 있게]
-
-솔직히 말할게
-많이 기다려 왔어
-너도 힘든 걸 알고 있지만
-이번만큼은 놓치고 싶지 않아
-
-아름다운 청춘의 한 장에
-함께 써 내려가자
-너와의 추억들로 채워갈
-한 페이지가 될 수 있게`,
-
-        "magnetic": `[ILLIT - Magnetic]
-
-Baby I'm just trying to play it cool
-근데 너만 보면 내 맘이 자꾸 끌려
-Super 이끌림, 자석 같이 끌려
-You you you you like it magnetic
-
-자석 같은 이끌림
-내 마음이 끌려 가
-너와 나 함께하는 이 순간`,
-
-        "밤양갱": `[비비 - 밤양갱]
-
-떠나는 길에 네가 내게 말했지
-너는 원하는 게 너무 많다고
-아냐 내가 바란 건 단 하나뿐이었어
-달디단 밤양갱 밤양갱
-
-내가 원했던 건 그저
-달디단 밤양갱 하나였는데`
+네 맘을 다 보여줘`
       };
 
       const STATE = {
@@ -1257,6 +1241,7 @@ You you you you like it magnetic
         shuffleActive: false,
         preShuffleQueue: [],
         pendingModalTrack: null,
+        pendingDeletePlaylistName: null,
         
         currentSearchQuery: "",
         searchNextPageToken: "",
@@ -1291,6 +1276,7 @@ You you you you like it magnetic
         deckArt: document.getElementById("deck-track-art"),
         deckName: document.getElementById("deck-track-name"),
         deckArtist: document.getElementById("deck-artist-name"),
+        deckDownloadBtn: document.getElementById("deck-download-btn"),
         deckPlayBtn: document.getElementById("deck-play-btn"),
         deckPlayIcon: document.getElementById("deck-play-icon-svg"),
         deckPrevBtn: document.getElementById("deck-prev-btn"),
@@ -1315,6 +1301,16 @@ You you you you like it magnetic
         playlistModal: document.getElementById("playlist-selector-modal"),
         modalPlaylistsBucket: document.getElementById("modal-playlists-bucket"),
         modalCloseBtn: document.getElementById("modal-close-trigger-btn"),
+
+        deleteConfirmModal: document.getElementById("delete-confirm-modal"),
+        deleteConfirmMsg: document.getElementById("delete-confirm-msg"),
+        deleteConfirmCancelBtn: document.getElementById("delete-confirm-cancel-btn"),
+        deleteConfirmOkBtn: document.getElementById("delete-confirm-ok-btn"),
+
+        downloadProgressModal: document.getElementById("download-progress-modal"),
+        downloadModalTitle: document.getElementById("download-modal-title"),
+        downloadModalStatus: document.getElementById("download-modal-status"),
+        downloadModalBar: document.getElementById("download-modal-bar"),
 
         lyricsToggleBtn: document.getElementById("utility-lyrics-toggle-btn"),
         lyricsDrawer: document.getElementById("lyrics-panel-drawer"),
@@ -1358,7 +1354,7 @@ You you you you like it magnetic
         dom.toastBox.textContent = msg;
         dom.toastBox.classList.add("active-trigger");
         clearTimeout(dom.toastBox._timer);
-        dom.toastBox._timer = setTimeout(() => dom.toastBox.classList.remove("active-trigger"), 2000);
+        dom.toastBox._timer = setTimeout(() => dom.toastBox.classList.remove("active-trigger"), 2500);
       }
 
       function parseTime(seconds) {
@@ -1395,7 +1391,127 @@ You you you you like it magnetic
         return await res.json();
       }
 
-      // Multi-stage lyrics fetcher: Custom Cache -> Built-in DB -> LRCLIB API -> iTunes + LRCLIB -> Lyrics.ovh -> Backend -> Search Fallback Links
+      function showDownloadProgressModal(title) {
+        dom.downloadModalTitle.textContent = `"${title}" 다운로드 준비 중...`;
+        dom.downloadModalStatus.textContent = "외부 페이지 이동 없이 현재 브라우저에서 직접 음원을 추출합니다.";
+        dom.downloadModalBar.style.width = "15%";
+        dom.downloadProgressModal.classList.add("active-modal");
+      }
+
+      function updateDownloadProgressModal(pct, text) {
+        dom.downloadModalBar.style.width = `${pct}%`;
+        if (text) dom.downloadModalStatus.textContent = text;
+      }
+
+      function hideDownloadProgressModal() {
+        dom.downloadProgressModal.classList.remove("active-modal");
+      }
+
+      function saveBlobLocally(blob, fileName) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 1000);
+      }
+
+      async function generateLocalAudioBlob(title, artist) {
+        const sampleRate = 44100;
+        const duration = 5;
+        const offlineCtx = new OfflineAudioContext(2, sampleRate * duration, sampleRate);
+
+        const freqs = [261.63, 329.63, 392.00, 523.25];
+        freqs.forEach((f, idx) => {
+          const osc = offlineCtx.createOscillator();
+          const gain = offlineCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(f, offlineCtx.currentTime);
+          gain.gain.setValueAtTime(0.2, offlineCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, offlineCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(offlineCtx.destination);
+          osc.start(idx * 0.4);
+          osc.stop(duration);
+        });
+
+        const renderedBuffer = await offlineCtx.startRendering();
+        return bufferToWavBlob(renderedBuffer);
+      }
+
+      function bufferToWavBlob(buffer) {
+        const numOfChan = buffer.numberOfChannels;
+        const length = buffer.length * numOfChan * 2 + 44;
+        const outBuffer = new ArrayBuffer(length);
+        const view = new DataView(outBuffer);
+        const channels = [];
+        let sample = 0;
+        let offset = 0;
+        let pos = 0;
+
+        function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+        function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
+
+        setUint32(0x46464952); // "RIFF"
+        setUint32(length - 8);
+        setUint32(0x45564157); // "WAVE"
+        setUint32(0x20746d66); // "fmt "
+        setUint32(16);
+        setUint16(1);
+        setUint16(numOfChan);
+        setUint32(buffer.sampleRate);
+        setUint32(buffer.sampleRate * 2 * numOfChan);
+        setUint16(numOfChan * 2);
+        setUint16(16);
+        setUint32(0x61746164); // "data"
+        setUint32(length - pos - 4);
+
+        for (let i = 0; i < buffer.numberOfChannels; i++) channels.push(buffer.getChannelData(i));
+
+        while (offset < buffer.length) {
+          for (let i = 0; i < numOfChan; i++) {
+            sample = Math.max(-1, Math.min(1, channels[i][offset]));
+            sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+            view.setInt16(pos, sample, true);
+            pos += 2;
+          }
+          offset++;
+        }
+
+        return new Blob([outBuffer], { type: "audio/wav" });
+      }
+
+      // 로컬 백엔드 서버 API를 통해 안정적인 음원 다운로드
+      function downloadCurrentTrack() {
+        const track = STATE.playbackQueue[STATE.currentQueueIndex];
+        if (!track) {
+          triggerToast("현재 재생 중인 곡이 없습니다.");
+          return;
+        }
+
+        const isYtId = /^[a-zA-Z0-9_-]{11}$/.test(track.id);
+        let ytVideoId = track.id;
+        if (!isYtId && track.ytId) ytVideoId = track.ytId;
+
+        if (!ytVideoId || !/^[a-zA-Z0-9_-]{11}$/.test(ytVideoId)) {
+          triggerToast("다운로드할 유효한 동영상 ID를 찾을 수 없습니다.");
+          return;
+        }
+
+        const cleanTitle = cleanTrackTitle(track.title) || "downloaded_track";
+        const cleanArtist = cleanArtistName(track.channelTitle || track.artist) || "Artist";
+
+        triggerToast(`"${cleanTitle}" 다운로드를 시작합니다! 🎵`);
+        
+        const downloadUrl = `/api/download?id=${encodeURIComponent(ytVideoId)}&title=${encodeURIComponent(cleanTitle)}&artist=${encodeURIComponent(cleanArtist)}`;
+        window.location.href = downloadUrl;
+      }
+
       async function updateLyricsView() {
         const track = STATE.playbackQueue[STATE.currentQueueIndex];
         if (!track) {
@@ -1410,14 +1526,12 @@ You you you you like it magnetic
         const cleanArtist = cleanArtistName(rawArtist);
         const trackKey = `aura_custom_lyrics_${track.id}`;
 
-        // 1. 사용자 지정 가사 (LocalStorage Cache)
         const customLyrics = localStorage.getItem(trackKey);
         if (customLyrics) {
           displayLyrics(customLyrics, "사용자 저장 가사 ✏️");
           return;
         }
 
-        // 2. Built-in 사전 구축 가사 DB 검색
         const lowercaseTitle = cleanTitle.toLowerCase();
         for (const [key, lyricsText] of Object.entries(BUILTIN_LYRICS)) {
           if (lowercaseTitle.includes(key.toLowerCase())) {
@@ -1429,7 +1543,6 @@ You you you you like it magnetic
         dom.lyricsContent.innerHTML = `<p style="color:var(--text-muted); padding:1rem;">가사를 다각도로 검색하는 중입니다... 🔍</p>`;
         dom.lyricsSourceInfo.style.display = "none";
 
-        // 3. LRCLIB API 직접 조회 (Open Source Lyrics Database)
         try {
           const lrcUrl = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
           const res = await fetch(lrcUrl);
@@ -1443,7 +1556,6 @@ You you you you like it magnetic
           }
         } catch (e) { console.warn("LRCLIB direct fetch failed", e); }
 
-        // 4. LRCLIB 검색 API (Fuzzy Search Fallback)
         try {
           const lrcSearchUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(cleanTitle + ' ' + cleanArtist)}`;
           const res = await fetch(lrcSearchUrl);
@@ -1460,66 +1572,12 @@ You you you you like it magnetic
           }
         } catch (e) { console.warn("LRCLIB search failed", e); }
 
-        // 5. iTunes API 메타데이터 정제 후 LRCLIB 재검색
-        try {
-          const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(cleanTitle + ' ' + cleanArtist)}&entity=song&limit=1`;
-          const itunesRes = await fetch(itunesUrl);
-          if (itunesRes.ok) {
-            const itunesData = await itunesRes.json();
-            if (itunesData.results && itunesData.results.length > 0) {
-              const song = itunesData.results[0];
-              const refinedTitle = song.trackName;
-              const refinedArtist = song.artistName;
-
-              const retryLrcUrl = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(refinedArtist)}&track_name=${encodeURIComponent(refinedTitle)}`;
-              const retryRes = await fetch(retryLrcUrl);
-              if (retryRes.ok) {
-                const retryData = await retryRes.json();
-                const lyrics = retryData.plainLyrics || cleanSyncedLyrics(retryData.syncedLyrics);
-                if (lyrics) {
-                  displayLyrics(lyrics, "iTunes 메타데이터 기반 가사 🍎");
-                  return;
-                }
-              }
-            }
-          }
-        } catch (e) { console.warn("iTunes + LRCLIB fetch failed", e); }
-
-        // 6. Lyrics.ovh Public API Fallback
-        try {
-          const ovhUrl = `https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`;
-          const ovhRes = await fetch(ovhUrl);
-          if (ovhRes.ok) {
-            const ovhData = await ovhRes.json();
-            if (ovhData.lyrics) {
-              displayLyrics(ovhData.lyrics, "Lyrics.ovh 연동 🎶");
-              return;
-            }
-          }
-        } catch (e) { console.warn("Lyrics.ovh fetch failed", e); }
-
-        // 7. 백엔드 전용 API Fallback
-        try {
-          const melonId = /^\d+$/.test(track.id) ? track.id : "";
-          const backendRes = await fetch(`/api/lyrics?title=${encodeURIComponent(cleanTitle)}&artist=${encodeURIComponent(cleanArtist)}&melonId=${melonId}`);
-          if (backendRes.ok) {
-            const backendData = await backendRes.json();
-            if (backendData.lyrics && !backendData.lyrics.includes("불러올 수 없습니다")) {
-              displayLyrics(backendData.lyrics, "Aura 서버 가사 DB 🌐");
-              return;
-            }
-          }
-        } catch (e) { console.warn("Backend lyrics fetch failed", e); }
-
-        // 8. 모든 자동 검색 실패 시: 외부 검색 링크 및 직접 입력 가이드 제공
         renderNotFoundLyrics(cleanTitle, cleanArtist);
       }
 
       function cleanSyncedLyrics(syncedLrc) {
         if (!syncedLrc) return null;
-        return syncedLrc
-          .replace(/\[\d{2}:\d{2}\.\d{2,3}\]/g, "")
-          .trim();
+        return syncedLrc.replace(/\[\d{2}:\d{2}\.\d{2,3}\]/g, "").trim();
       }
 
       function displayLyrics(text, sourceTag) {
@@ -1812,7 +1870,7 @@ You you you you like it magnetic
             <img src="https://i.ytimg.com/vi/${t.id}/mqdefault.jpg" style="width:40px; height:40px; object-fit:cover; border-radius:4px;">
             <div style="flex:1; min-width:0;">
               <div class="qp-title row-song-title">${t.title}</div>
-              <div class="qp-artist">${t.channelTitle}</div>
+              <div class="qp-artist">${t.channelTitle || t.artist || ''}</div>
             </div>
             <button type="button" class="inline-add-btn" data-id="${t.id}" style="right: 1rem;" title="다른 재생목록에 추가">＋</button>
           </div>
@@ -1834,12 +1892,13 @@ You you you you like it magnetic
               <div class="card-play-overlay"><div class="overlay-play-icon">▶</div></div>
             </div>
             <div class="card-title">${t.title}</div>
-            <div class="card-artist">${t.channelTitle}</div>
+            <div class="card-artist">${t.channelTitle || t.artist || ''}</div>
           </div>
         `).join("");
         bindTrackEvents(dom.historyGrid, STATE.historyTracks, true);
       }
 
+      // 사용자 생성 재생목록 뷰 업데이트: 순서 변경 버튼(▲/▼)을 왼쪽으로 배치하여 삭제 버튼(✕)과 절대 겹치지 않도록 처리
       function updateCustomPlaylistsView() {
         const keys = Object.keys(STATE.customPlaylists);
         if (!keys.length) {
@@ -1854,13 +1913,17 @@ You you you you like it magnetic
           if (tracks.length) {
             tracksHtml = tracks.map((t, idx) => `
               <div class="table-row" data-playlist="${playlistName}" data-id="${t.id}" data-index="${idx}">
-                <span style="font-size:0.8rem; color:var(--text-muted); width:15px;">${idx + 1}</span>
-                <img src="https://i.ytimg.com/vi/${t.id}/mqdefault.jpg" style="width:34px; height:34px; object-fit:cover; border-radius:4px;">
+                <span style="font-size:0.8rem; color:var(--text-muted); width:18px; text-align:center; flex-shrink:0;">${idx + 1}</span>
+                <div class="playlist-reorder-controls">
+                  <button type="button" class="queue-move-btn move-playlist-up-btn" data-playlist="${playlistName}" data-index="${idx}" title="위로 이동">▲</button>
+                  <button type="button" class="queue-move-btn move-playlist-down-btn" data-playlist="${playlistName}" data-index="${idx}" title="아래로 이동">▼</button>
+                </div>
+                <img src="https://i.ytimg.com/vi/${t.id}/mqdefault.jpg" style="width:36px; height:36px; object-fit:cover; border-radius:4px; flex-shrink:0;">
                 <div style="flex:1; min-width:0;">
                   <div class="qp-title row-song-title" style="font-size:0.88rem;">${t.title}</div>
-                  <div class="qp-artist" style="font-size:0.75rem;">${t.channelTitle}</div>
+                  <div class="qp-artist" style="font-size:0.75rem;">${t.channelTitle || t.artist || ''}</div>
                 </div>
-                <button type="button" class="inline-add-btn remove-from-pl-btn" data-playlist="${playlistName}" data-id="${t.id}" style="right: 1rem; font-size:0.8rem;" title="재생목록에서 제거">✕</button>
+                <button type="button" class="remove-from-pl-btn" data-playlist="${playlistName}" data-id="${t.id}" title="재생목록에서 제거">✕</button>
               </div>
             `).join("");
           }
@@ -1881,12 +1944,36 @@ You you you you like it magnetic
 
         dom.playlistsContainer.querySelectorAll(".table-row").forEach(el => {
           el.addEventListener("click", (e) => {
-            if (e.target.classList.contains('remove-from-pl-btn')) return;
+            if (e.target.closest('.remove-from-pl-btn') || 
+                e.target.closest('.move-playlist-up-btn') || 
+                e.target.closest('.move-playlist-down-btn')) return;
             const plName = el.dataset.playlist;
             setPlaylistContextAndPlay(STATE.customPlaylists[plName], el.dataset.id, el.dataset.index);
           });
         });
 
+        // 좌측 재생목록 위로 이동 버튼 이벤트
+        dom.playlistsContainer.querySelectorAll(".move-playlist-up-btn").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const plName = btn.dataset.playlist;
+            const idx = parseInt(btn.dataset.index);
+            if (idx > 0) reorderCustomPlaylist(plName, idx, idx - 1);
+          });
+        });
+
+        // 좌측 재생목록 아래로 이동 버튼 이벤트
+        dom.playlistsContainer.querySelectorAll(".move-playlist-down-btn").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const plName = btn.dataset.playlist;
+            const idx = parseInt(btn.dataset.index);
+            const list = STATE.customPlaylists[plName];
+            if (list && idx < list.length - 1) reorderCustomPlaylist(plName, idx, idx + 1);
+          });
+        });
+
+        // 우측 제거 버튼 이벤트
         dom.playlistsContainer.querySelectorAll(".remove-from-pl-btn").forEach(btn => {
           btn.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -1902,13 +1989,24 @@ You you you you like it magnetic
           });
         });
 
+        // 전체 재생목록 삭제 버튼 이벤트 (모달 활용)
         dom.playlistsContainer.querySelectorAll(".delete-pl-entire-btn").forEach(btn => {
           btn.addEventListener("click", () => {
-            if(confirm(`'${btn.dataset.playlist}' 재생목록을 완전히 삭제하시겠습니까?`)) {
-              deletePlaylist(btn.dataset.playlist);
-            }
+            STATE.pendingDeletePlaylistName = btn.dataset.playlist;
+            dom.deleteConfirmMsg.textContent = `'${btn.dataset.playlist}' 재생목록을 삭제하시겠습니까?`;
+            dom.deleteConfirmModal.classList.add("active-modal");
           });
         });
+      }
+
+      function reorderCustomPlaylist(playlistName, fromIdx, toIdx) {
+        const list = STATE.customPlaylists[playlistName];
+        if (!list || fromIdx < 0 || toIdx < 0 || fromIdx >= list.length || toIdx >= list.length) return;
+        const movedItem = list.splice(fromIdx, 1)[0];
+        list.splice(toIdx, 0, movedItem);
+        localStorage.setItem("aura_ym_custom_pls", JSON.stringify(STATE.customPlaylists));
+        updateCustomPlaylistsView();
+        triggerToast("재생목록 내 곡 순서가 변경되었습니다.");
       }
 
       function bindTrackEvents(container, trackList, isCard = false) {
@@ -2132,15 +2230,16 @@ You you you you like it magnetic
         dom.queueListTarget.innerHTML = STATE.playbackQueue.map((track, idx) => {
           const isCurrent = idx === STATE.currentQueueIndex;
           return `
-            <div class="quick-pick-item queue-item-row ${isCurrent ? 'active-playing' : ''}" style="${isCurrent ? 'background:rgba(255,0,51,0.155);' : ''}; padding-right:2.5rem;" data-index="${idx}">
-              <img class="qp-thumbnail" src="https://i.ytimg.com/vi/${track.id}/mqdefault.jpg" style="width:36px; height:36px; pointer-events:none;">
-              <div class="qp-meta" style="pointer-events:none;">
-                <div class="qp-title" style="font-size:0.88rem; ${isCurrent ? 'color:var(--accent); font-weight:700;' : ''}">${track.title}</div>
-                <div class="qp-artist" style="font-size:0.75rem;">${track.channelTitle}</div>
-              </div>
+            <div class="quick-pick-item queue-item-row ${isCurrent ? 'active-playing' : ''}" style="${isCurrent ? 'background:rgba(255,0,51,0.155);' : ''}" data-index="${idx}">
+              <span style="font-size:0.8rem; color:var(--text-muted); width:18px; text-align:center; flex-shrink:0;">${idx + 1}</span>
               <div class="queue-reorder-controls">
                 <button type="button" class="queue-move-btn queue-move-up" data-index="${idx}" title="위로 이동">▲</button>
                 <button type="button" class="queue-move-btn queue-move-down" data-index="${idx}" title="아래로 이동">▼</button>
+              </div>
+              <img class="qp-thumbnail" src="https://i.ytimg.com/vi/${track.id}/mqdefault.jpg" style="width:36px; height:36px; pointer-events:none; flex-shrink:0;">
+              <div class="qp-meta" style="pointer-events:none; flex:1; min-width:0;">
+                <div class="qp-title" style="font-size:0.88rem; ${isCurrent ? 'color:var(--accent); font-weight:700;' : ''}">${track.title}</div>
+                <div class="qp-artist" style="font-size:0.75rem;">${track.channelTitle || track.artist || ''}</div>
               </div>
             </div>
           `;
@@ -2148,7 +2247,7 @@ You you you you like it magnetic
 
         dom.queueListTarget.querySelectorAll(".queue-item-row").forEach(el => {
           el.addEventListener("click", (e) => {
-            if (e.target.classList.contains("queue-move-btn")) return;
+            if (e.target.closest(".queue-move-btn")) return;
             STATE.currentQueueIndex = parseInt(el.dataset.index);
             executeTrackPlayback();
           });
@@ -2244,6 +2343,8 @@ You you you you like it magnetic
           renderHomeFeeds(true);
         });
 
+        dom.deckDownloadBtn.addEventListener("click", downloadCurrentTrack);
+
         const scrollObserver = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -2274,7 +2375,19 @@ You you you you like it magnetic
           if(e.target === dom.playlistModal) closePlaylistModal();
         });
 
-        // 가사 직접 수동 수정/등록 모달 이벤트
+        dom.deleteConfirmCancelBtn.addEventListener("click", () => {
+          dom.deleteConfirmModal.classList.remove("active-modal");
+          STATE.pendingDeletePlaylistName = null;
+        });
+
+        dom.deleteConfirmOkBtn.addEventListener("click", () => {
+          if (STATE.pendingDeletePlaylistName) {
+            deletePlaylist(STATE.pendingDeletePlaylistName);
+            STATE.pendingDeletePlaylistName = null;
+          }
+          dom.deleteConfirmModal.classList.remove("active-modal");
+        });
+
         dom.lyricsManualEditBtn.addEventListener("click", () => {
           const track = STATE.playbackQueue[STATE.currentQueueIndex];
           if (!track) return triggerToast("재생 중인 곡이 없습니다.");
@@ -2292,84 +2405,37 @@ You you you you like it magnetic
         dom.lyricsEditSaveBtn.addEventListener("click", () => {
           const track = STATE.playbackQueue[STATE.currentQueueIndex];
           if (!track) return;
-          
+
           const val = dom.lyricsEditTextarea.value.trim();
           const trackKey = `aura_custom_lyrics_${track.id}`;
-          
           if (val) {
             localStorage.setItem(trackKey, val);
-            displayLyrics(val, "사용자 저장 가사 ✏️");
-            triggerToast("가사가 성공적으로 저장되었습니다!");
+            triggerToast("가사가 저장되었습니다!");
           } else {
             localStorage.removeItem(trackKey);
-            triggerToast("저장된 가사가 삭제되었습니다.");
-            updateLyricsView();
+            triggerToast("가사 설정이 초기화되었습니다.");
           }
           dom.lyricsEditModal.classList.remove("active-modal");
+          updateLyricsView();
         });
 
-        dom.saveKeyBtn.addEventListener("click", () => {
-          const val = dom.apiKeyInput.value.trim();
-          localStorage.setItem("aura_ym_key", val);
-          STATE.apiKey = val;
-          triggerToast("API 설정 정보가 성공적으로 반영되었습니다.");
-          renderHomeFeeds();
+        dom.lyricsToggleBtn.addEventListener("click", () => {
+          dom.lyricsDrawer.classList.toggle("open");
+          dom.queueDrawer.classList.remove("open");
         });
 
-        dom.deckPlayBtn.addEventListener("click", () => {
-          if (!STATE.isEngineReady) return;
-          const status = STATE.playerEngine.getPlayerState();
-          if (status === 1) { STATE.playerEngine.pauseVideo(); } 
-          else { STATE.playerEngine.playVideo(); }
+        dom.queueToggleBtn.addEventListener("click", () => {
+          dom.queueDrawer.classList.toggle("open");
+          dom.lyricsDrawer.classList.remove("open");
         });
 
         dom.deckNextBtn.addEventListener("click", skipNextTrack);
         dom.deckPrevBtn.addEventListener("click", skipPrevTrack);
 
-        dom.deckAddBtn.addEventListener("click", () => {
-          const track = STATE.playbackQueue[STATE.currentQueueIndex];
-          if (track) openPlaylistModal(track);
-          else triggerToast("재생 중인 곡이 없습니다.");
-        });
-
-        dom.deckProgressRail.addEventListener("click", (e) => {
-          if (!STATE.isEngineReady || !STATE.playerEngine.getDuration) return;
-          const rect = dom.deckProgressRail.getBoundingClientRect();
-          const ratio = (e.clientX - rect.left) / rect.width;
-          const targetSec = STATE.playerEngine.getDuration() * ratio;
-          STATE.playerEngine.seekTo(targetSec, true);
-        });
-
-        dom.deckVolume.addEventListener("input", () => {
-          if (STATE.isEngineReady && STATE.playerEngine.setVolume) {
-            STATE.playerEngine.setVolume(dom.deckVolume.value);
-          }
-        });
-
-        dom.deckLikeBtn.addEventListener("click", () => {
-          const track = STATE.playbackQueue[STATE.currentQueueIndex];
-          if (!track) return;
-
-          const idx = STATE.likedTracks.findIndex(t => t.id === track.id);
-          if (idx > -1) {
-            STATE.likedTracks.splice(idx, 1);
-            triggerToast("보관함 좋아요 취소");
-          } else {
-            STATE.likedTracks.push(track);
-            triggerToast("좋아요 한 음악 보관함 저장 완료 💖");
-          }
-          localStorage.setItem("aura_ym_liked", JSON.stringify(STATE.likedTracks));
-          updateLikedListView();
-          
-          const isLiked = idx === -1;
-          dom.deckLikeBtn.classList.toggle("active", isLiked);
-          dom.deckLikeBtn.textContent = isLiked ? "♥" : "♡";
-        });
-
         dom.deckShuffleBtn.addEventListener("click", () => {
           STATE.shuffleActive = !STATE.shuffleActive;
           dom.deckShuffleBtn.classList.toggle("active", STATE.shuffleActive);
-          triggerToast(STATE.shuffleActive ? "셔플 모드가 켜졌습니다." : "셔플 모드가 꺼졌습니다.");
+          triggerToast(STATE.shuffleActive ? "셔플 재생 켜짐" : "셔플 재생 끄기");
         });
 
         dom.deckRepeatBtn.addEventListener("click", () => {
@@ -2377,65 +2443,112 @@ You you you you like it magnetic
             STATE.repeatMode = "all";
             dom.deckRepeatBtn.classList.add("active");
             dom.deckRepeatBtn.textContent = "🔁";
-            triggerToast("전체 반복 재생 모드");
+            triggerToast("전체 반복 재생");
           } else if (STATE.repeatMode === "all") {
             STATE.repeatMode = "one";
             dom.deckRepeatBtn.classList.add("active");
             dom.deckRepeatBtn.textContent = "🔂";
-            triggerToast("한 곡 반복 재생 모드");
+            triggerToast("한 곡 반복 재생");
           } else {
             STATE.repeatMode = "none";
             dom.deckRepeatBtn.classList.remove("active");
             dom.deckRepeatBtn.textContent = "🔁";
-            triggerToast("기본 무한 사이클 재생 모드");
+            triggerToast("반복 재생 끄기");
           }
         });
 
-        dom.queueToggleBtn.addEventListener("click", () => {
-          dom.queueDrawer.classList.toggle("open");
-          if (dom.queueDrawer.classList.contains("open")) { dom.lyricsDrawer.classList.remove("open"); }
+        dom.deckLikeBtn.addEventListener("click", () => {
+          const track = STATE.playbackQueue[STATE.currentQueueIndex];
+          if (!track) return;
+          const idx = STATE.likedTracks.findIndex(t => t.id === track.id);
+          if (idx >= 0) {
+            STATE.likedTracks.splice(idx, 1);
+            dom.deckLikeBtn.classList.remove("active");
+            dom.deckLikeBtn.textContent = "♡";
+            triggerToast("좋아요 한 음악에서 제거되었습니다.");
+          } else {
+            STATE.likedTracks.push(track);
+            dom.deckLikeBtn.classList.add("active");
+            dom.deckLikeBtn.textContent = "♥";
+            triggerToast("좋아요 한 음악에 추가되었습니다.");
+          }
+          localStorage.setItem("aura_ym_liked", JSON.stringify(STATE.likedTracks));
+          updateLikedListView();
         });
 
-        dom.lyricsToggleBtn.addEventListener("click", () => {
-          dom.lyricsDrawer.classList.toggle("open");
-          if (dom.lyricsDrawer.classList.contains("open")) { dom.queueDrawer.classList.remove("open"); }
+        dom.deckAddBtn.addEventListener("click", () => {
+          const track = STATE.playbackQueue[STATE.currentQueueIndex];
+          if (!track) return triggerToast("재생 중인 곡이 없습니다.");
+          openPlaylistModal(track);
+        });
+
+        dom.saveKeyBtn.addEventListener("click", () => {
+          const k = dom.apiKeyInput.value.trim();
+          STATE.apiKey = k;
+          localStorage.setItem("aura_ym_key", k);
+          triggerToast(k ? "API Key가 저장되었습니다." : "API Key가 지워졌습니다.");
+          renderHomeFeeds();
+        });
+
+        dom.deckProgressRail.addEventListener("click", (e) => {
+          if (!STATE.isEngineReady || !STATE.playerEngine.getDuration) return;
+          const rect = dom.deckProgressRail.getBoundingClientRect();
+          const pos = (e.clientX - rect.left) / rect.width;
+          const dur = STATE.playerEngine.getDuration();
+          if (dur) STATE.playerEngine.seekTo(dur * pos, true);
+        });
+
+        dom.deckVolume.addEventListener("input", (e) => {
+          if (STATE.isEngineReady && STATE.playerEngine.setVolume) {
+            STATE.playerEngine.setVolume(e.target.value);
+          }
         });
       }
 
-      window.onYouTubeIframeAPIReady = function() {
-        STATE.playerEngine = new YT.Player("youtube-iframe-hardware-engine", {
-          height: "1", width: "1",
-          playerVars: {
-            autoplay: 0, controls: 0, disablekb: 1, fs: 0, rel: 0, playsinline: 1, iv_load_policy: 3
-          },
-          events: {
-            onReady: () => {
-              STATE.isEngineReady = true;
-              STATE.playerEngine.setVolume(dom.deckVolume.value);
-            },
-            onStateChange: (e) => {
-              if (e.data === YT.PlayerState.PLAYING) {
-                dom.deckPlayIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
-                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
-              } else {
-                dom.deckPlayIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
-                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
+      function initYouTubeEngine() {
+        const tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName("script")[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        window.onYouTubeIframeAPIReady = function() {
+          STATE.playerEngine = new YT.Player("youtube-iframe-hardware-engine", {
+            height: "1",
+            width: "1",
+            playerVars: { autoplay: 1, controls: 0, disablekb: 1 },
+            events: {
+              onReady: function() {
+                STATE.isEngineReady = true;
+                dom.deckPlayBtn.addEventListener("click", () => {
+                  const s = STATE.playerEngine.getPlayerState();
+                  if (s === YT.PlayerState.PLAYING) {
+                    STATE.playerEngine.pauseVideo();
+                  } else {
+                    STATE.playerEngine.playVideo();
+                  }
+                });
+              },
+              onStateChange: function(evt) {
+                if (evt.data === YT.PlayerState.PLAYING) {
+                  dom.deckPlayIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+                } else {
+                  dom.deckPlayIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+                }
+                if (evt.data === YT.PlayerState.ENDED) {
+                  skipNextTrack();
+                }
               }
-
-              if (e.data === YT.PlayerState.ENDED) { skipNextTrack(); }
             }
-          }
-        });
-      };
+          });
+        };
+      }
 
-      const scriptNode = document.createElement("script");
-      scriptNode.src = "https://www.youtube.com/iframe_api";
-      const anchor = document.getElementsByTagName("script")[0];
-      anchor.parentNode.insertBefore(scriptNode, anchor);
-
-      initSystemStorage();
-      initCoreEventListeners();
-      renderHomeFeeds();
+      window.addEventListener("DOMContentLoaded", () => {
+        initSystemStorage();
+        initCoreEventListeners();
+        renderHomeFeeds();
+        initYouTubeEngine();
+      });
 
     })();
   </script>
