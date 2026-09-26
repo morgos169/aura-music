@@ -236,7 +236,7 @@ function fetchLrcLibLyrics(title, artist) {
     });
 }
 
-const server = http.createServer((req, res) => {
+const handler = (req, res) => {
     // Parse URL and search parameters
     const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const pathname = parsedUrl.pathname;
@@ -372,12 +372,20 @@ const server = http.createServer((req, res) => {
             }
         });
     }
-});
+};
 
-server.listen(PORT, () => {
-    const url = `http://localhost:${PORT}`;
-    console.log(`서버가 시작되었습니다: ${url}`);
-    // 브라우저 자동 실행
-    const startCmd = process.platform === 'win32' ? 'start ""' : 'open';
-    exec(`${startCmd} ${url}`);
-});
+const server = http.createServer(handler);
+
+// Vercel 환경이 아닐 때만 로컬 포트로 서버를 엽니다.
+if (!process.env.VERCEL) {
+    server.listen(PORT, () => {
+        const url = `http://localhost:${PORT}`;
+        console.log(`서버가 시작되었습니다: ${url}`);
+        // 브라우저 자동 실행
+        const startCmd = process.platform === 'win32' ? 'start ""' : 'open';
+        exec(`${startCmd} ${url}`);
+    });
+}
+
+// Vercel 서버리스 함수로 동작할 수 있도록 핸들러를 export 합니다.
+module.exports = handler;
