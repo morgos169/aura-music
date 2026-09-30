@@ -3,266 +3,247 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
-const youtubedl = require('youtube-dl-exec');
 
 const PORT = 3000;
 
-// In-memory caches to reduce external requests and speed up execution
-const searchCache = {};
 const lyricsCache = {};
 let top100Cache = null;
 let top100CacheTime = 0;
+let top100CacheSource = '';
 
-// 1. Scrape Melon Top 100 Chart
-function fetchMelonChart() {
+const CHART_URLS = [
+    'https://rss.marketingtools.apple.com/api/v2/kr/music/most-played/100/songs.json',
+    'https://rss.applemarketingtools.com/api/v2/kr/music/most-played/100/songs.json',
+    'https://rss.marketingtools.apple.com/api/v2/us/music/most-played/100/songs.json',
+    'https://itunes.apple.com/kr/rss/topsongs/limit=100/json',
+    'https://itunes.apple.com/us/rss/topsongs/limit=100/json'
+];
+
+function httpsGetJson(url, headers = {}, redirectCount = 0) {
     return new Promise((resolve, reject) => {
-        // Cache Top 100 results for 10 minutes to avoid rate-limiting
-        const now = Date.now();
-        if (top100Cache && (now - top100CacheTime < 10 * 60 * 1000)) {
-            return resolve(top100Cache);
+        const req = https.get(url, {
+            headers: {
+                'User-Agent': 'AuraMusic/1.1 (personal playlist; chart display)',
+                'Accept': 'application/json, text/javascript, */*;q=0.1',
+                ...headers
+            }
+        }, (res) => {
+            const status = res.statusCode || 0;
+            if ([301, 302, 303, 307, 308].includes(status) && res.headers.location) {
+                if (redirectCount >= 5) {
+                    return reject(new Error('Too many redirects'));
+                }
+                const next = new URL(res.headers.location, url).toString();
+                res.resume();
+                return resolve(httpsGetJson(next, headers, redirectCount + 1));
+            }
+
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                if (status >= 400) {
+                    return reject(new Error(`HTTP ${status} for ${url}`));
+                }
+                try {
+                    resolve(JSON.parse(data));
+                } catch (e) {
+                    reject(new Error(`Invalid JSON from ${url}: ${e.message}`));
+                }
+            });
+        });
+        req.setTimeout(15000, () => {
+            req.destroy(new Error(`Timeout fetching ${url}`));
+        });
+        req.on('error', reject);
+    });
+}
+
+function mapAppleMarketingResults(results, sourceLabel) {
+    return (results || []).map((item, index) => {
+        let albumArt = item.artworkUrl100 || '';
+        if (albumArt) {
+            albumArt = albumArt.replace(/100x100bb/, '300x300bb');
         }
-
-        const options = {
-            hostname: 'www.melon.com',
-            path: '/chart/index.htm',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
+        return {
+            rank: index + 1,
+            id: String(item.id || `apple-${index + 1}`),
+            title: item.name || '',
+            artist: item.artistName || '',
+            albumArt: albumArt || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+            source: sourceLabel
         };
-
-        https.get(options, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                try {
-                    const list = [];
-                    // tr elements with class lst50 or lst100
-                    const trRegex = /<tr class="lst(50|100)"[^>]*>([\s\S]*?)<\/tr>/g;
-                    let match;
-                    let rank = 1;
-                    while ((match = trRegex.exec(data)) !== null && rank <= 100) {
-                        const trHtml = match[2];
-                        
-                        // Extract Song ID
-                        const idMatch = trHtml.match(/value="(\d+)"/);
-                        const songId = idMatch ? idMatch[1] : '';
-
-                        // Extract Title
-                        const titleMatch = trHtml.match(/<div class="ellipsis rank01">[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/);
-                        let title = titleMatch ? titleMatch[1] : '';
-                        title = title
-                            .replace(/<[^>]+>/g, '') // remove tags
-                            .replace(/&nbsp;/gi, ' ')
-                            .replace(/&amp;/g, '&')
-                            .replace(/&lt;/g, '<')
-                            .replace(/&gt;/g, '>')
-                            .replace(/&quot;/g, '"')
-                            .replace(/&#39;/g, "'")
-                            .trim();
-
-                        // Extract Artist
-                        const artistMatch = trHtml.match(/<div class="ellipsis rank02">([\s\S]*?)<\/div>/);
-                        let artist = '';
-                        if (artistMatch) {
-                            const artistDiv = artistMatch[1];
-                            const aMatch = artistDiv.match(/<a[^>]*>([\s\S]*?)<\/a>/);
-                            artist = aMatch ? aMatch[1] : '';
-                        }
-                        artist = artist
-                            .replace(/<[^>]+>/g, '')
-                            .replace(/&nbsp;/gi, ' ')
-                            .replace(/&amp;/g, '&')
-                            .replace(/&lt;/g, '<')
-                            .replace(/&gt;/g, '>')
-                            .replace(/&quot;/g, '"')
-                            .replace(/&#39;/g, "'")
-                            .trim();
-
-                        // Extract Album Art Cover
-                        const imgMatch = trHtml.match(/<a[^>]*class="image_typeAll"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/);
-                        let albumArt = imgMatch ? imgMatch[1] : '';
-                        // Strip quality query params if needed, or keep standard
-                        if (albumArt && albumArt.indexOf('?') > -1) {
-                            albumArt = albumArt.substring(0, albumArt.indexOf('?'));
-                        }
-
-                        if (title && artist) {
-                            list.push({
-                                rank,
-                                id: songId,
-                                title,
-                                artist,
-                                albumArt: albumArt || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
-                            });
-                            rank++;
-                        }
-                    }
-                    if (list.length > 0) {
-                        top100Cache = list;
-                        top100CacheTime = now;
-                        resolve(list);
-                    } else {
-                        reject(new Error("Failed to parse chart rows"));
-                    }
-                } catch (e) {
-                    reject(e);
-                }
-            });
-        }).on('error', reject);
-    });
+    }).filter(t => t.title && t.artist);
 }
 
-// 2. Scrape YouTube for Video ID
-function searchYouTube(query) {
-    return new Promise((resolve, reject) => {
-        if (searchCache[query]) {
-            return resolve(searchCache[query]);
+function mapItunesRssEntries(entries, sourceLabel) {
+    return (entries || []).map((item, index) => {
+        const images = item['im:image'] || [];
+        const bestImg = images.length ? images[images.length - 1].label : '';
+        const albumArt = bestImg
+            ? String(bestImg).replace(/\d+x\d+bb/, '300x300bb')
+            : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        const id =
+            item.id?.attributes?.['im:id'] ||
+            item['im:id']?.label ||
+            `itunes-${index + 1}`;
+        return {
+            rank: index + 1,
+            id: String(id),
+            title: item['im:name']?.label || '',
+            artist: item['im:artist']?.label || '',
+            albumArt,
+            source: sourceLabel
+        };
+    }).filter(t => t.title && t.artist);
+}
+
+function parseChartPayload(payload, url) {
+    if (payload?.feed?.results?.length) {
+        return {
+            tracks: mapAppleMarketingResults(payload.feed.results, 'apple-marketing-tools'),
+            source: url
+        };
+    }
+    if (payload?.feed?.entry?.length) {
+        const entries = Array.isArray(payload.feed.entry)
+            ? payload.feed.entry
+            : [payload.feed.entry];
+        return {
+            tracks: mapItunesRssEntries(entries, 'itunes-rss'),
+            source: url
+        };
+    }
+    return { tracks: [], source: url };
+}
+
+async function fetchOfficialChart(force = false) {
+    const now = Date.now();
+    if (!force && top100Cache && (now - top100CacheTime < 10 * 60 * 1000)) {
+        return { tracks: top100Cache, source: top100CacheSource, cached: true };
+    }
+
+    let lastError = null;
+    for (const url of CHART_URLS) {
+        try {
+            const payload = await httpsGetJson(url);
+            const parsed = parseChartPayload(payload, url);
+            if (parsed.tracks.length > 0) {
+                top100Cache = parsed.tracks;
+                top100CacheTime = now;
+                top100CacheSource = parsed.source;
+                return { tracks: parsed.tracks, source: parsed.source, cached: false };
+            }
+            lastError = new Error(`Empty chart from ${url}`);
+        } catch (err) {
+            lastError = err;
+            console.error('Chart fetch failed:', url, err.message);
         }
+    }
 
-        const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
-        const options = {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
-            }
-        };
-
-        https.get(url, options, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                try {
-                    // Method A: Look for "videoRenderer":{"videoId":"..."
-                    let videoId = '';
-                    const match = data.match(/"videoRenderer"\s*:\s*\{\s*"videoId"\s*:\s*"([a-zA-Z0-9_-]{11})"/);
-                    if (match && match[1]) {
-                        videoId = match[1];
-                    } else {
-                        // Method B: Fallback watch?v= matching
-                        const watchMatch = data.match(/\/watch\?v=([a-zA-Z0-9_-]{11})/);
-                        if (watchMatch && watchMatch[1]) {
-                            videoId = watchMatch[1];
-                        }
-                    }
-
-                    if (videoId) {
-                        searchCache[query] = videoId;
-                        resolve(videoId);
-                    } else {
-                        reject(new Error("No videoId found on YouTube"));
-                    }
-                } catch (e) {
-                    reject(e);
-                }
-            });
-        }).on('error', reject);
-    });
+    throw lastError || new Error('All chart sources failed');
 }
 
-// 3. Scrape Melon Lyrics Details
-function fetchMelonLyrics(songId) {
-    return new Promise((resolve, reject) => {
-        const options = {
-            hostname: 'www.melon.com',
-            path: `/song/detail.htm?songId=${songId}`,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
-        };
-
-        https.get(options, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                try {
-                    const match = data.match(/<div[^>]*class="lyric"[^>]*id="d_video_summary"[^>]*>([\s\S]*?)<\/div>/);
-                    if (match) {
-                        let htmlLyrics = match[1];
-                        htmlLyrics = htmlLyrics.replace(/<!--[\s\S]*?-->/g, ''); // Remove comments
-                        let lyrics = htmlLyrics.replace(/<br\s*\/?>/gi, '\n');   // Convert linebreaks
-                        lyrics = lyrics.replace(/<[^>]+>/g, '');                // Remove HTML tags
-                        lyrics = lyrics
-                            .replace(/&amp;/g, '&')
-                            .replace(/&lt;/g, '<')
-                            .replace(/&gt;/g, '>')
-                            .replace(/&quot;/g, '"')
-                            .replace(/&#39;/g, "'")
-                            .trim();
-                        resolve(lyrics);
-                    } else {
-                        resolve(null);
-                    }
-                } catch (e) {
-                    reject(e);
-                }
-            });
-        }).on('error', reject);
-    });
+function stripSyncedLrc(synced) {
+    if (!synced) return null;
+    return synced.replace(/\[\d{2}:\d{2}\.\d{2,3}\]/g, '').trim() || null;
 }
 
-// 4. Query LRCLIB API for Lyrics
 function fetchLrcLibLyrics(title, artist) {
     return new Promise((resolve) => {
-        const cleanTitle = title.replace(/[^a-zA-Z0-9가-힣\s]/g, ' ').replace(/\s+/g, ' ').trim();
-        const cleanArtist = artist.replace(/[^a-zA-Z0-9가-힣\s]/g, ' ').replace(/\s+/g, ' ').trim();
-        const query = `${cleanArtist} ${cleanTitle}`;
-        const url = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
+        const cleanTitle = title.replace(/[^\w\uac00-\ud7a3\s]/gi, ' ').replace(/\s+/g, ' ').trim();
+        const cleanArtist = artist.replace(/[^\w\uac00-\ud7a3\s]/gi, ' ').replace(/\s+/g, ' ').trim();
+        if (!cleanTitle) return resolve(null);
 
-        const options = {
-            headers: {
-                'User-Agent': 'AuraMusicPlayer/1.0.0 (https://github.com/google-deepmind/antigravity)'
-            }
+        const headers = {
+            'User-Agent': 'AuraMusic/1.1 (https://lrclib.net; personal lyrics display)'
         };
 
-        https.get(url, options, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                try {
-                    const results = JSON.parse(data);
-                    if (Array.isArray(results) && results.length > 0) {
-                        const match = results.find(r => r.plainLyrics) || results[0];
-                        if (match && match.plainLyrics) {
-                            resolve(match.plainLyrics.trim());
+        const getUrl =
+            `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}` +
+            `&track_name=${encodeURIComponent(cleanTitle)}`;
+
+        httpsGetJson(getUrl, headers)
+            .then((data) => {
+                const lyrics = data.plainLyrics || stripSyncedLrc(data.syncedLyrics);
+                if (lyrics) {
+                    resolve({ text: lyrics.trim(), source: 'LRCLIB' });
+                    return null;
+                }
+                return null;
+            })
+            .catch(() => null)
+            .then((hit) => {
+                if (hit) {
+                    resolve(hit);
+                    return;
+                }
+                const searchUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(`${cleanArtist} ${cleanTitle}`)}`;
+                return httpsGetJson(searchUrl, headers)
+                    .then((results) => {
+                        if (!Array.isArray(results) || results.length === 0) {
+                            resolve(null);
                             return;
                         }
-                    }
-                    resolve(null);
-                } catch (e) {
+                        const match = results.find(r => r.plainLyrics || r.syncedLyrics) || results[0];
+                        const lyrics = match.plainLyrics || stripSyncedLrc(match.syncedLyrics);
+                        if (lyrics) {
+                            resolve({ text: lyrics.trim(), source: 'LRCLIB' });
+                        } else {
+                            resolve(null);
+                        }
+                    })
+                    .catch(() => resolve(null));
+            });
+    });
+}
+
+function fetchLyricsOvh(title, artist) {
+    return new Promise((resolve) => {
+        const cleanTitle = title.trim();
+        const cleanArtist = artist.trim();
+        if (!cleanTitle || !cleanArtist) return resolve(null);
+
+        const url =
+            `https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`;
+
+        httpsGetJson(url, {
+            'User-Agent': 'AuraMusic/1.1 (personal lyrics display)'
+        })
+            .then((data) => {
+                if (data && data.lyrics) {
+                    resolve({ text: String(data.lyrics).trim(), source: 'lyrics.ovh' });
+                } else {
                     resolve(null);
                 }
-            });
-        }).on('error', () => resolve(null));
+            })
+            .catch(() => resolve(null));
     });
+}
+
+async function resolveLyrics(title, artist) {
+    const fromLrc = await fetchLrcLibLyrics(title, artist);
+    if (fromLrc) return fromLrc;
+    return fetchLyricsOvh(title, artist);
 }
 
 const handler = (req, res) => {
-    // Parse URL and search parameters
     const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const pathname = parsedUrl.pathname;
 
     if (pathname === '/api/top100') {
-        fetchMelonChart()
-            .then(tracks => {
-                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({ success: true, tracks }));
-            })
-            .catch(err => {
-                console.error(err);
-                res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({ success: false, error: err.message }));
-            });
-    } else if (pathname === '/api/search') {
-        const query = parsedUrl.searchParams.get('q') || '';
-        if (!query) {
-            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-            return res.end(JSON.stringify({ success: false, error: 'Query missing' }));
-        }
-
-        searchYouTube(query)
-            .then(videoId => {
-                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({ success: true, videoId }));
+        const force = parsedUrl.searchParams.get('refresh') === '1';
+        fetchOfficialChart(force)
+            .then(({ tracks, source, cached }) => {
+                res.writeHead(200, {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'Cache-Control': 'no-store'
+                });
+                res.end(JSON.stringify({
+                    success: true,
+                    source,
+                    cached: !!cached,
+                    tracks
+                }));
             })
             .catch(err => {
                 console.error(err);
@@ -272,95 +253,37 @@ const handler = (req, res) => {
     } else if (pathname === '/api/lyrics') {
         const title = parsedUrl.searchParams.get('title') || '';
         const artist = parsedUrl.searchParams.get('artist') || '';
-        const melonId = parsedUrl.searchParams.get('melonId') || '';
+        const cacheKey = `${title}::${artist}`.toLowerCase();
 
-        const cacheKey = `${title}-${artist}-${melonId}`;
         if (lyricsCache[cacheKey]) {
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-            return res.end(JSON.stringify({ success: true, lyrics: lyricsCache[cacheKey] }));
+            return res.end(JSON.stringify({ success: true, ...lyricsCache[cacheKey] }));
         }
 
-        let lyricsPromise;
-        if (melonId) {
-            lyricsPromise = fetchMelonLyrics(melonId).then(lyrics => {
-                if (lyrics) return lyrics;
-                return fetchLrcLibLyrics(title, artist);
-            });
-        } else {
-            lyricsPromise = fetchLrcLibLyrics(title, artist);
-        }
-
-        lyricsPromise
-            .then(lyrics => {
+        resolveLyrics(title, artist)
+            .then(result => {
                 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                if (lyrics) {
-                    lyricsCache[cacheKey] = lyrics;
-                    res.end(JSON.stringify({ success: true, lyrics }));
+                if (result) {
+                    lyricsCache[cacheKey] = { lyrics: result.text, source: result.source };
+                    res.end(JSON.stringify({
+                        success: true,
+                        lyrics: result.text,
+                        source: result.source
+                    }));
                 } else {
                     res.end(JSON.stringify({
                         success: false,
-                        lyrics: `[${title} — ${artist}]\n\n가사를 불러올 수 없습니다.\n\nAura Music과 함께 즐거운 감상 되세요.`
+                        lyrics: null,
+                        source: null
                     }));
                 }
             })
             .catch(err => {
                 console.error(err);
                 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({
-                    success: false,
-                    lyrics: `[${title} — ${artist}]\n\n가사를 로드하는 과정에서 오류가 발생했습니다.\n\nAura Music과 함께 즐거운 감상 되세요.`
-                }));
+                res.end(JSON.stringify({ success: false, lyrics: null, error: err.message }));
             });
-    } else if (pathname === '/api/download') {
-        const videoId = parsedUrl.searchParams.get('id');
-        let title = parsedUrl.searchParams.get('title') || 'downloaded_track';
-        let artist = parsedUrl.searchParams.get('artist') || 'Artist';
-
-        if (!videoId) {
-            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-            return res.end(JSON.stringify({ success: false, error: 'Video ID missing' }));
-        }
-
-        const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
-        
-        // Encode the filename for HTTP headers (using .m4a since yt-dlp fetches bestaudio)
-        const rawFileName = `${artist} - ${title}.m4a`;
-        const encodedFileName = encodeURIComponent(rawFileName);
-
-        res.writeHead(200, {
-            'Content-Disposition': `attachment; filename="${encodedFileName}"; filename*=UTF-8''${encodedFileName}`,
-            'Content-Type': 'audio/mp4'
-        });
-
-        try {
-            const subprocess = youtubedl.exec(ytUrl, {
-                f: 'bestaudio[ext=m4a]/bestaudio/best',
-                o: '-'
-            });
-            
-            subprocess.stdout.pipe(res);
-
-            subprocess.on('close', () => {
-                if (!res.writableEnded) {
-                    res.end();
-                }
-            });
-
-            subprocess.on('error', (err) => {
-                console.error('youtube-dl stream error:', err);
-                if (!res.writableEnded) {
-                    res.end();
-                }
-            });
-        } catch (err) {
-            console.error('Download setup error:', err);
-            if (!res.headersSent) {
-                res.writeHead(500);
-                res.end('Server Error');
-            }
-        }
     } else {
-        // Fallback: serve index.html
         const filePath = path.join(__dirname, 'index.html');
         fs.readFile(filePath, (err, content) => {
             if (err) {
@@ -376,16 +299,13 @@ const handler = (req, res) => {
 
 const server = http.createServer(handler);
 
-// Vercel 환경이 아닐 때만 로컬 포트로 서버를 엽니다.
 if (!process.env.VERCEL) {
     server.listen(PORT, () => {
         const url = `http://localhost:${PORT}`;
         console.log(`서버가 시작되었습니다: ${url}`);
-        // 브라우저 자동 실행
         const startCmd = process.platform === 'win32' ? 'start ""' : 'open';
         exec(`${startCmd} ${url}`);
     });
 }
 
-// Vercel 서버리스 함수로 동작할 수 있도록 핸들러를 export 합니다.
 module.exports = handler;

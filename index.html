@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aura Music — YouTube Music Premium Experience</title>
+  <title>Aura Music — YouTube Playlist Player</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -916,6 +916,74 @@
       .queue-panel-drawer.open { right: 0 !important; }
       .alert-toast-popup { bottom: 160px; }
     }
+
+    #youtube-visible-player-wrap {
+      position: fixed;
+      right: 16px;
+      bottom: 108px;
+      width: 200px;
+      height: 112px;
+      z-index: 40;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      background: #000;
+      transition: opacity 0.2s ease;
+    }
+    #youtube-visible-player-wrap.is-hidden {
+      width: 1px;
+      height: 1px;
+      right: auto;
+      bottom: auto;
+      left: -9999px;
+      opacity: 0.001;
+      pointer-events: none;
+      border: none;
+      box-shadow: none;
+      overflow: hidden;
+    }
+    #youtube-visible-player-wrap iframe,
+    #youtube-iframe-hardware-engine {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    @media (max-width: 768px) {
+      #youtube-visible-player-wrap:not(.is-hidden) {
+        width: 140px;
+        height: 78px;
+        right: 10px;
+        bottom: 158px;
+      }
+    }
+
+    .settings-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .settings-toggle-row label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .settings-toggle-row .toggle-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      font-weight: 400;
+    }
+    .settings-toggle-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -1016,8 +1084,20 @@
                   <input type="password" id="settings-api-key-input" style="flex:1; background:#222; border:1px solid #333; color:#fff; padding:0.5rem; border-radius:4px;" placeholder="API Key 입력">
                   <button type="button" id="settings-save-key-btn" style="background:#fff; color:#000; border:none; padding:0.5rem 1rem; border-radius:4px; font-weight:600; cursor:pointer;">저장</button>
                 </div>
-                <p style="font-size:0.75rem; color:var(--text-muted);">※ 키를 등록하지 않으면 풍부한 사전 구축 빌트인 음원 데이터셋 데모 믹스로 구동됩니다.</p>
+                <p style="font-size:0.75rem; color:var(--text-muted);">※ Google Cloud에서 YouTube Data API v3를 활성화한 키를 등록하면 검색·차트 재생이 공식 API로 동작합니다. 미등록 시 내장 데모 목록만 사용합니다. 재생은 YouTube IFrame 임베드로만 이루어지며 음원 파일 다운로드는 지원하지 않습니다.</p>
+                <div class="settings-toggle-row">
+                  <div>
+                    <label for="settings-yt-player-visible">YouTube 화면 표시</label>
+                    <p class="toggle-hint">오른쪽 아래 미니 플레이어를 보이게 합니다. 끄면 숨기고 오디오만 재생합니다.</p>
+                  </div>
+                  <input type="checkbox" id="settings-yt-player-visible" checked>
+                </div>
               </div>
+            </div>
+
+            <div class="library-legal-footer" style="margin-top:2rem; padding:1.25rem 1.5rem; border-top:1px solid var(--border); text-align:center;">
+              <p style="font-size:0.85rem; color:var(--text); font-weight:500; margin-bottom:0.4rem;">이 프로그램은 Premium 오디오 프로그램이 아닙니다.</p>
+              <p style="font-size:0.75rem; color:var(--text-muted);">YouTube API의 도움을 받았습니다.</p>
             </div>
           </div>
         </section>
@@ -1031,10 +1111,9 @@
       <img class="deck-thumbnail" id="deck-track-art" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" style="opacity:0;">
       <div class="qp-meta">
         <div class="qp-title" id="deck-track-name">재생 중인 곡이 없습니다</div>
-        <div class="qp-artist" id="deck-artist-name">Aura Player Engine</div>
+        <div class="qp-artist" id="deck-artist-name">Aura Music</div>
       </div>
       <div class="deck-control-actions">
-        <button type="button" class="icon-action-btn" id="deck-download-btn" title="현재 곡 direct 음원 다운로드">📥</button>
         <button type="button" class="icon-action-btn" id="deck-add-btn" title="재생목록에 추가">＋</button>
         <button type="button" class="icon-action-btn" id="deck-like-btn" title="좋아요">♥</button>
       </div>
@@ -1085,7 +1164,7 @@
   <div class="playlist-modal-popup" id="lyrics-edit-modal">
     <div class="modal-card">
       <h3 class="modal-title">가사 직접 입력 / 수정</h3>
-      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.75rem;">현재 곡의 가사를 직접 붙여넣거나 작성할 수 있습니다. 입력된 가사는 저장되어 자동 표시됩니다.</p>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.75rem;">개인 감상용으로만 가사를 붙여넣거나 작성할 수 있습니다. 이용 권한이 있는 가사만 입력해 주세요. 입력된 가사는 이 브라우저에만 저장됩니다.</p>
       <textarea id="lyrics-edit-textarea" rows="10" style="width:100%; background:#111; border:1px solid #333; color:#fff; padding:0.75rem; border-radius:6px; font-family:inherit; font-size:0.9rem; outline:none; resize:vertical; margin-bottom:1rem;" placeholder="여기에 가사를 붙여넣으세요..."></textarea>
       <div style="display:flex; gap:0.5rem;">
         <button type="button" class="modal-close-btn" id="lyrics-edit-cancel-btn" style="flex:1;">취소</button>
@@ -1114,21 +1193,9 @@
     </div>
   </div>
 
-  <!-- In-Page Direct Download Progress Modal -->
-  <div class="playlist-modal-popup" id="download-progress-modal">
-    <div class="modal-card" style="text-align:center;">
-      <div style="font-size:2rem; margin-bottom:0.5rem;" id="download-modal-icon">📥</div>
-      <h3 class="modal-title" id="download-modal-title" style="margin-bottom:0.5rem;">음원 직접 다운로드 중...</h3>
-      <p id="download-modal-status" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">페이지 이동 없이 이 브라우저에서 직접 음원 파일을 추출 및 다운로드합니다.</p>
-      <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
-        <div id="download-modal-bar" style="width:15%; height:100%; background:var(--accent); transition:width 0.3s ease;"></div>
-      </div>
-    </div>
-  </div>
-
   <div class="alert-toast-popup" id="app-toast-alert-box">알림 메시지</div>
 
-  <div style="position:absolute; width:1px; height:1px; opacity:0.001; pointer-events:none; left:-9999px;">
+  <div id="youtube-visible-player-wrap" title="YouTube 플레이어">
     <div id="youtube-iframe-hardware-engine"></div>
   </div>
 
@@ -1173,59 +1240,6 @@
         ]
       };
 
-      const BUILTIN_LYRICS = {
-        "고민중독": `[QWER - 고민중독 (T.B.H)]
-
-하염없이 뒤따라가던 뒷모습에
-어느샌가 홀려 눈을 뜬 아침
-어제오늘 내일 하루 온종일
-네 생각만 나는 이상한 나날들
-
-반짝거리며 스쳐 가버린
-그 미소 뒤에 남겨진 나
-왜 마음이 이렇게 답답해질까?
-
-하나 둘 셋 하면 숨을 내쉬고
-말해볼까 고민하지만
-어쩌면 좋아 내 마음을
-너에게 모두 빼앗겨버린 걸까?
-
-어찌해 이 마음을 어쩌면 좋을까
-너에게 빠져버린 나를 좀 말려줘
-어느새 머릿속에 온통 너뿐야
-고민해 매일 밤 나 어떡해야 해`,
-
-        "supernova": `[aespa - Supernova]
-
-I'm the Flash
-So dangerous, so bright
-Su-Su-Su-Supernova
-Nova, Nova
-Can't stop, hyperstellar
-
-사건은 다가와 ah, ooh, ayy
-거세게 느껴져
-원초적인 본능에 끌려
-질주하는 마음 deep inside
-
-Su-Su-Su-Supernova
-사건의 지평선 너머로
-내 우주가 폭발해
-Su-Su-Su-Supernova`,
-
-        "hype boy": `[NewJeans - Hype Boy]
-
-(1, 2, 3, 4)
-Baby, got my chemical hype boy
-너의 눈빛에 취해 버렸어
-Day & night, I think about you
-
-Cause I know what you like boy
-You're my chemical hype boy
-내게만 살짝 보여줘
-네 맘을 다 보여줘`
-      };
-
       const STATE = {
         apiKey: "",
         likedTracks: [],
@@ -1250,7 +1264,11 @@ You're my chemical hype boy
         
         homeNextPageToken: "",
         homeRecommendTracks: [],
-        isHomeLoading: false
+        isHomeLoading: false,
+        homeFeedRequestId: 0,
+        homeRefreshTimer: null,
+        lastHomeArtistHint: "",
+        ytPlayerVisible: true
       };
 
       const dom = {
@@ -1272,11 +1290,12 @@ You're my chemical hype boy
         
         apiKeyInput: document.getElementById("settings-api-key-input"),
         saveKeyBtn: document.getElementById("settings-save-key-btn"),
+        ytPlayerVisibleToggle: document.getElementById("settings-yt-player-visible"),
+        ytPlayerWrap: document.getElementById("youtube-visible-player-wrap"),
         
         deckArt: document.getElementById("deck-track-art"),
         deckName: document.getElementById("deck-track-name"),
         deckArtist: document.getElementById("deck-artist-name"),
-        deckDownloadBtn: document.getElementById("deck-download-btn"),
         deckPlayBtn: document.getElementById("deck-play-btn"),
         deckPlayIcon: document.getElementById("deck-play-icon-svg"),
         deckPrevBtn: document.getElementById("deck-prev-btn"),
@@ -1306,11 +1325,6 @@ You're my chemical hype boy
         deleteConfirmMsg: document.getElementById("delete-confirm-msg"),
         deleteConfirmCancelBtn: document.getElementById("delete-confirm-cancel-btn"),
         deleteConfirmOkBtn: document.getElementById("delete-confirm-ok-btn"),
-
-        downloadProgressModal: document.getElementById("download-progress-modal"),
-        downloadModalTitle: document.getElementById("download-modal-title"),
-        downloadModalStatus: document.getElementById("download-modal-status"),
-        downloadModalBar: document.getElementById("download-modal-bar"),
 
         lyricsToggleBtn: document.getElementById("utility-lyrics-toggle-btn"),
         lyricsDrawer: document.getElementById("lyrics-panel-drawer"),
@@ -1364,9 +1378,27 @@ You're my chemical hype boy
         return `${m}:${String(s).padStart(2, '0')}`;
       }
 
+      function applyYtPlayerVisibility() {
+        if (!dom.ytPlayerWrap) return;
+        dom.ytPlayerWrap.classList.toggle("is-hidden", !STATE.ytPlayerVisible);
+        if (dom.ytPlayerVisibleToggle) {
+          dom.ytPlayerVisibleToggle.checked = STATE.ytPlayerVisible;
+        }
+      }
+
+      function setYtPlayerVisible(visible) {
+        STATE.ytPlayerVisible = !!visible;
+        localStorage.setItem("aura_yt_player_visible", STATE.ytPlayerVisible ? "1" : "0");
+        applyYtPlayerVisibility();
+      }
+
       function initSystemStorage() {
         STATE.apiKey = localStorage.getItem("aura_ym_key") || "";
         dom.apiKeyInput.value = STATE.apiKey;
+
+        const savedPlayerVisible = localStorage.getItem("aura_yt_player_visible");
+        STATE.ytPlayerVisible = savedPlayerVisible === null ? true : savedPlayerVisible === "1";
+        applyYtPlayerVisibility();
 
         try {
           STATE.likedTracks = JSON.parse(localStorage.getItem("aura_ym_liked") || "[]");
@@ -1391,125 +1423,21 @@ You're my chemical hype boy
         return await res.json();
       }
 
-      function showDownloadProgressModal(title) {
-        dom.downloadModalTitle.textContent = `"${title}" 다운로드 준비 중...`;
-        dom.downloadModalStatus.textContent = "외부 페이지 이동 없이 현재 브라우저에서 직접 음원을 추출합니다.";
-        dom.downloadModalBar.style.width = "15%";
-        dom.downloadProgressModal.classList.add("active-modal");
-      }
-
-      function updateDownloadProgressModal(pct, text) {
-        dom.downloadModalBar.style.width = `${pct}%`;
-        if (text) dom.downloadModalStatus.textContent = text;
-      }
-
-      function hideDownloadProgressModal() {
-        dom.downloadProgressModal.classList.remove("active-modal");
-      }
-
-      function saveBlobLocally(blob, fileName) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.style.display = "none";
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }, 1000);
-      }
-
-      async function generateLocalAudioBlob(title, artist) {
-        const sampleRate = 44100;
-        const duration = 5;
-        const offlineCtx = new OfflineAudioContext(2, sampleRate * duration, sampleRate);
-
-        const freqs = [261.63, 329.63, 392.00, 523.25];
-        freqs.forEach((f, idx) => {
-          const osc = offlineCtx.createOscillator();
-          const gain = offlineCtx.createGain();
-          osc.type = "sine";
-          osc.frequency.setValueAtTime(f, offlineCtx.currentTime);
-          gain.gain.setValueAtTime(0.2, offlineCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, offlineCtx.currentTime + duration);
-          osc.connect(gain);
-          gain.connect(offlineCtx.destination);
-          osc.start(idx * 0.4);
-          osc.stop(duration);
+      async function resolveYouTubeVideoId(title, artist) {
+        if (!STATE.apiKey) {
+          throw new Error("YouTube Data API 키가 필요합니다. 보관함 및 설정에서 API Key를 저장해 주세요.");
+        }
+        const q = `${artist || ""} ${title || ""} official audio`.trim();
+        const data = await callYoutubeApi("search", {
+          part: "snippet",
+          q,
+          type: "video",
+          videoCategoryId: "10",
+          maxResults: "1"
         });
-
-        const renderedBuffer = await offlineCtx.startRendering();
-        return bufferToWavBlob(renderedBuffer);
-      }
-
-      function bufferToWavBlob(buffer) {
-        const numOfChan = buffer.numberOfChannels;
-        const length = buffer.length * numOfChan * 2 + 44;
-        const outBuffer = new ArrayBuffer(length);
-        const view = new DataView(outBuffer);
-        const channels = [];
-        let sample = 0;
-        let offset = 0;
-        let pos = 0;
-
-        function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
-        function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
-
-        setUint32(0x46464952); // "RIFF"
-        setUint32(length - 8);
-        setUint32(0x45564157); // "WAVE"
-        setUint32(0x20746d66); // "fmt "
-        setUint32(16);
-        setUint16(1);
-        setUint16(numOfChan);
-        setUint32(buffer.sampleRate);
-        setUint32(buffer.sampleRate * 2 * numOfChan);
-        setUint16(numOfChan * 2);
-        setUint16(16);
-        setUint32(0x61746164); // "data"
-        setUint32(length - pos - 4);
-
-        for (let i = 0; i < buffer.numberOfChannels; i++) channels.push(buffer.getChannelData(i));
-
-        while (offset < buffer.length) {
-          for (let i = 0; i < numOfChan; i++) {
-            sample = Math.max(-1, Math.min(1, channels[i][offset]));
-            sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
-            view.setInt16(pos, sample, true);
-            pos += 2;
-          }
-          offset++;
-        }
-
-        return new Blob([outBuffer], { type: "audio/wav" });
-      }
-
-      // 로컬 백엔드 서버 API를 통해 안정적인 음원 다운로드
-      function downloadCurrentTrack() {
-        const track = STATE.playbackQueue[STATE.currentQueueIndex];
-        if (!track) {
-          triggerToast("현재 재생 중인 곡이 없습니다.");
-          return;
-        }
-
-        const isYtId = /^[a-zA-Z0-9_-]{11}$/.test(track.id);
-        let ytVideoId = track.id;
-        if (!isYtId && track.ytId) ytVideoId = track.ytId;
-
-        if (!ytVideoId || !/^[a-zA-Z0-9_-]{11}$/.test(ytVideoId)) {
-          triggerToast("다운로드할 유효한 동영상 ID를 찾을 수 없습니다.");
-          return;
-        }
-
-        const cleanTitle = cleanTrackTitle(track.title) || "downloaded_track";
-        const cleanArtist = cleanArtistName(track.channelTitle || track.artist) || "Artist";
-
-        triggerToast(`"${cleanTitle}" 다운로드를 시작합니다! 🎵`);
-        
-        const downloadUrl = `/api/download?id=${encodeURIComponent(ytVideoId)}&title=${encodeURIComponent(cleanTitle)}&artist=${encodeURIComponent(cleanArtist)}`;
-        window.location.href = downloadUrl;
+        const videoId = data?.items?.[0]?.id?.videoId;
+        if (!videoId) throw new Error("YouTube에서 곡을 찾을 수 없습니다.");
+        return videoId;
       }
 
       async function updateLyricsView() {
@@ -1528,20 +1456,26 @@ You're my chemical hype boy
 
         const customLyrics = localStorage.getItem(trackKey);
         if (customLyrics) {
-          displayLyrics(customLyrics, "사용자 저장 가사 ✏️");
+          displayLyrics(customLyrics, "사용자 저장 가사 (이 기기 전용)");
           return;
         }
 
-        const lowercaseTitle = cleanTitle.toLowerCase();
-        for (const [key, lyricsText] of Object.entries(BUILTIN_LYRICS)) {
-          if (lowercaseTitle.includes(key.toLowerCase())) {
-            displayLyrics(lyricsText, "Aura 고품질 빌트인 가사 🎵");
-            return;
-          }
-        }
-
-        dom.lyricsContent.innerHTML = `<p style="color:var(--text-muted); padding:1rem;">가사를 다각도로 검색하는 중입니다... 🔍</p>`;
+        dom.lyricsContent.innerHTML = `<p style="color:var(--text-muted); padding:1rem;">공개 가사 API에서 검색 중...</p>`;
         dom.lyricsSourceInfo.style.display = "none";
+
+        try {
+          const apiUrl = `/api/lyrics?title=${encodeURIComponent(cleanTitle)}&artist=${encodeURIComponent(cleanArtist)}`;
+          const res = await fetch(apiUrl);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.lyrics) {
+              displayLyrics(data.lyrics, `${data.source || "공개 API"} · 개인 감상용 표시`);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn("Server lyrics fetch failed", e);
+        }
 
         try {
           const lrcUrl = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
@@ -1550,7 +1484,7 @@ You're my chemical hype boy
             const data = await res.json();
             const lyrics = data.plainLyrics || cleanSyncedLyrics(data.syncedLyrics);
             if (lyrics) {
-              displayLyrics(lyrics, "LRCLIB 라이브러리 연동 ✨");
+              displayLyrics(lyrics, "LRCLIB · 개인 감상용 표시");
               return;
             }
           }
@@ -1565,12 +1499,24 @@ You're my chemical hype boy
               const bestMatch = searchResults.find(item => item.plainLyrics || item.syncedLyrics);
               if (bestMatch) {
                 const lyrics = bestMatch.plainLyrics || cleanSyncedLyrics(bestMatch.syncedLyrics);
-                displayLyrics(lyrics, "LRCLIB 검색 엔진 연동 🔍");
+                displayLyrics(lyrics, "LRCLIB 검색 · 개인 감상용 표시");
                 return;
               }
             }
           }
         } catch (e) { console.warn("LRCLIB search failed", e); }
+
+        try {
+          const ovhUrl = `https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`;
+          const res = await fetch(ovhUrl);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.lyrics) {
+              displayLyrics(String(data.lyrics).trim(), "lyrics.ovh · 개인 감상용 표시");
+              return;
+            }
+          }
+        } catch (e) { console.warn("lyrics.ovh fetch failed", e); }
 
         renderNotFoundLyrics(cleanTitle, cleanArtist);
       }
@@ -1588,24 +1534,26 @@ You're my chemical hype boy
 
       function renderNotFoundLyrics(title, artist) {
         dom.lyricsSourceInfo.style.display = "none";
-        const searchQuery = encodeURIComponent(`${title} ${artist} 가사`);
-        const melonQuery = encodeURIComponent(`${title} ${artist}`);
-        
+        const searchQuery = encodeURIComponent(`${title} ${artist} lyrics`);
+        const geniusQuery = encodeURIComponent(`${title} ${artist}`);
+
         dom.lyricsContent.innerHTML = `
           <div style="padding: 1rem 0.5rem; text-align: center;">
             <p style="font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem;">[${title}]</p>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">${artist}</p>
             
             <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 1.25rem;">
-              자동 가사 검색 결과가 없습니다.<br>아래 버튼을 눌러 바로 가사를 검색하거나<br>상단의 <b>[✏️ 가사 수정]</b> 버튼으로 직접 등록해 보세요!
+              공개 가사 API에서 찾을 수 없습니다.<br>
+              공식 가사 사이트에서 확인하거나,<br>
+              권한이 있는 가사를 <b>[✏️ 가사 수정]</b>으로 이 기기에만 저장할 수 있습니다.
             </p>
 
             <div class="external-lyrics-btn-group">
-              <a href="https://www.melon.com/search/total/index.htm?q=${melonQuery}" target="_blank" rel="noopener" class="ext-search-btn">
-                🍈 멜론에서 검색
+              <a href="https://genius.com/search?q=${geniusQuery}" target="_blank" rel="noopener" class="ext-search-btn">
+                Genius에서 검색
               </a>
               <a href="https://www.google.com/search?q=${searchQuery}" target="_blank" rel="noopener" class="ext-search-btn">
-                🔍 구글에서 검색
+                Google에서 검색
               </a>
             </div>
           </div>
@@ -1631,43 +1579,128 @@ You're my chemical hype boy
         return list;
       }
 
-      async function renderTop100View() {
-        dom.top100ListTarget.innerHTML = `<p style="color:var(--text-muted); padding:1rem;">차트 데이터를 실시간으로 동기화하는 중입니다...</p>`;
-        try {
-          const res = await fetch('/api/top100');
-          const data = await res.json();
-          if (data.success && Array.isArray(data.tracks)) {
-            const tracks = data.tracks;
-            dom.top100ListTarget.innerHTML = tracks.map((t, idx) => `
-              <div class="table-row" data-id="${t.id}" data-index="${idx}">
-                <span style="font-size:1rem; font-weight:700; color:var(--accent); width:35px; text-align:center;">${t.rank}</span>
-                <img src="${t.albumArt}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;" onerror="this.src='https://i.ytimg.com/vi/${t.id}/mqdefault.jpg'">
-                <div style="flex:1; min-width:0;">
-                  <div class="qp-title row-song-title">${t.title}</div>
-                  <div class="qp-artist">${t.artist}</div>
-                </div>
-                <button type="button" class="inline-add-btn" data-id="${t.id}" style="right: 1rem;" title="재생목록에 추가">＋</button>
-              </div>
-            `).join("");
-            dom.top100Title.textContent = "실시간 인기 차트 Top 100 (Melon 실시간 차트 연동)";
-            bindTrackEvents(dom.top100ListTarget, tracks);
-          } else { throw new Error("Invalid chart data"); }
-        } catch (e) {
-          const tracks = generateMockTop100();
-          dom.top100Title.textContent = "실시간 인기 차트 Top 100 (데모 데이터)";
-          dom.top100ListTarget.innerHTML = tracks.map((t, idx) => `
-            <div class="table-row" data-id="${t.id}" data-index="${idx}">
-              <span style="font-size:1rem; font-weight:700; color:var(--accent); width:35px; text-align:center;">${t.rank}</span>
-              <img src="https://i.ytimg.com/vi/${t.id}/mqdefault.jpg" style="width:40px; height:40px; object-fit:cover; border-radius:4px;">
-              <div style="flex:1; min-width:0;">
-                <div class="qp-title row-song-title">${t.title}</div>
-                <div class="qp-artist">${t.channelTitle}</div>
-              </div>
-              <button type="button" class="inline-add-btn" data-id="${t.id}" style="right: 1rem;" title="재생목록에 추가">＋</button>
-            </div>
-          `).join("");
-          bindTrackEvents(dom.top100ListTarget, tracks);
+      async function fetchAppleChartDirect() {
+        const urls = [
+          "https://rss.marketingtools.apple.com/api/v2/kr/music/most-played/100/songs.json",
+          "https://rss.applemarketingtools.com/api/v2/kr/music/most-played/100/songs.json",
+          "https://rss.marketingtools.apple.com/api/v2/us/music/most-played/100/songs.json"
+        ];
+        for (const url of urls) {
+          try {
+            const res = await fetch(url);
+            if (!res.ok) continue;
+            const payload = await res.json();
+            const results = payload?.feed?.results;
+            if (!Array.isArray(results) || !results.length) continue;
+            return results.map((item, index) => {
+              let albumArt = item.artworkUrl100 || "";
+              if (albumArt) albumArt = albumArt.replace(/100x100bb/, "300x300bb");
+              return {
+                id: String(item.id || `apple-${index + 1}`),
+                title: item.name || "",
+                artist: item.artistName || "",
+                channelTitle: item.artistName || "",
+                albumArt,
+                rank: index + 1
+              };
+            }).filter(t => t.title && t.artist);
+          } catch (e) {
+            console.warn("Direct Apple chart failed", url, e);
+          }
         }
+        return null;
+      }
+
+      async function fetchYouTubeMusicChart() {
+        if (!STATE.apiKey) return null;
+        try {
+          const data = await callYoutubeApi("videos", {
+            part: "snippet",
+            chart: "mostPopular",
+            videoCategoryId: "10",
+            regionCode: "KR",
+            maxResults: "50"
+          });
+          const items = data.items || [];
+          if (!items.length) return null;
+          return items.map((item, index) => ({
+            id: item.id,
+            title: cleanTrackTitle(item.snippet.title),
+            artist: item.snippet.channelTitle,
+            channelTitle: item.snippet.channelTitle,
+            albumArt: `https://i.ytimg.com/vi/${item.id}/mqdefault.jpg`,
+            rank: index + 1
+          }));
+        } catch (e) {
+          console.warn("YouTube chart failed", e);
+          return null;
+        }
+      }
+
+      function paintTop100Tracks(tracks, titleText) {
+        dom.top100Title.textContent = titleText;
+        dom.top100ListTarget.innerHTML = tracks.map((t, idx) => `
+          <div class="table-row" data-id="${t.id}" data-index="${idx}">
+            <span style="font-size:1rem; font-weight:700; color:var(--accent); width:35px; text-align:center;">${t.rank || idx + 1}</span>
+            <img src="${t.albumArt || `https://i.ytimg.com/vi/${t.id}/mqdefault.jpg`}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;" alt="" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'">
+            <div style="flex:1; min-width:0;">
+              <div class="qp-title row-song-title">${t.title}</div>
+              <div class="qp-artist">${t.artist || t.channelTitle || ""}</div>
+            </div>
+            <button type="button" class="inline-add-btn" data-id="${t.id}" style="right: 1rem;" title="재생목록에 추가">＋</button>
+          </div>
+        `).join("");
+        bindTrackEvents(dom.top100ListTarget, tracks);
+      }
+
+      async function renderTop100View() {
+        dom.top100ListTarget.innerHTML = `<p style="color:var(--text-muted); padding:1rem;">공식 차트를 불러오는 중...</p>`;
+
+        try {
+          const res = await fetch(`/api/top100?refresh=1&_=${Date.now()}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && Array.isArray(data.tracks) && data.tracks.length) {
+              const tracks = data.tracks.map(t => ({
+                id: t.id,
+                title: t.title,
+                artist: t.artist,
+                channelTitle: t.artist,
+                albumArt: t.albumArt,
+                rank: t.rank
+              }));
+              paintTop100Tracks(tracks, "인기 차트 Top 100 (Apple Music · 공식 RSS)");
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn("Server chart API failed", e);
+        }
+
+        const directApple = await fetchAppleChartDirect();
+        if (directApple && directApple.length) {
+          paintTop100Tracks(directApple, "인기 차트 Top 100 (Apple Music · 직접 연동)");
+          return;
+        }
+
+        const ytChart = await fetchYouTubeMusicChart();
+        if (ytChart && ytChart.length) {
+          paintTop100Tracks(ytChart, "인기 차트 (YouTube Music 카테고리 · Data API)");
+          return;
+        }
+
+        const tracks = generateMockTop100();
+        paintTop100Tracks(tracks, "인기 차트 Top 100 (오프라인 데모)");
+      }
+
+      function scheduleHomeFeedsRefresh(reason = "") {
+        clearTimeout(STATE.homeRefreshTimer);
+        STATE.homeRefreshTimer = setTimeout(() => {
+          const homeActive = document.getElementById("pane-home")?.classList.contains("active");
+          if (homeActive || reason === "force") {
+            renderHomeFeeds(false, true);
+          }
+        }, 350);
       }
 
       async function dispatchSearch(query, isLoadMore = false) {
@@ -1753,8 +1786,9 @@ You're my chemical hype boy
         highlightActiveElementsGlobal();
       }
 
-      async function renderHomeFeeds(isLoadMore = false) {
-        if (STATE.isHomeLoading) return;
+      async function renderHomeFeeds(isLoadMore = false, force = false) {
+        if (STATE.isHomeLoading && !force && !isLoadMore) return;
+        const requestId = ++STATE.homeFeedRequestId;
         STATE.isHomeLoading = true;
 
         let pool = CORE_DATABASE[STATE.currentMood] || CORE_DATABASE.all;
@@ -1766,6 +1800,7 @@ You're my chemical hype boy
             if (favoriteArtist) {
                 searchQueryStr = `${favoriteArtist} 노래 추천`;
                 shelfTitleText = `'${favoriteArtist}' 좋아하시나요? 맞춤 추천`;
+                STATE.lastHomeArtistHint = favoriteArtist;
                 
                 if (!STATE.apiKey) {
                     const matched = CORE_DATABASE.all.filter(t => t.channelTitle === favoriteArtist);
@@ -1793,37 +1828,46 @@ You're my chemical hype boy
             if (isLoadMore && STATE.homeNextPageToken) params.pageToken = STATE.homeNextPageToken;
 
             const data = await callYoutubeApi("search", params);
+            if (requestId !== STATE.homeFeedRequestId) return;
+
             STATE.homeNextPageToken = data.nextPageToken || "";
 
-            const parsed = data.items.map(item => ({
+            const parsed = (data.items || []).map(item => ({
               id: item.id.videoId, title: cleanTrackTitle(item.snippet.title), channelTitle: item.snippet.channelTitle
             })).filter(t => t.id);
             
-            if (!isLoadMore) {
-                renderQuickPicks(parsed.slice(0, 8));
-                STATE.homeRecommendTracks = parsed.slice(8);
-                renderRecommendGrid(STATE.homeRecommendTracks);
-            } else {
-                STATE.homeRecommendTracks.push(...parsed);
-                renderRecommendGrid(STATE.homeRecommendTracks);
-            }
+            if (parsed.length > 0) {
+              if (!isLoadMore) {
+                  const picks = parsed.slice(0, Math.min(8, parsed.length));
+                  renderQuickPicks(picks);
+                  STATE.homeRecommendTracks = parsed.length > 8 ? parsed.slice(8) : parsed;
+                  renderRecommendGrid(STATE.homeRecommendTracks);
+              } else {
+                  STATE.homeRecommendTracks.push(...parsed);
+                  renderRecommendGrid(STATE.homeRecommendTracks);
+              }
 
-            if (STATE.homeNextPageToken) {
-              dom.homeLoadMoreBtn.style.display = "block";
-              dom.homeLoadMoreBtn.textContent = "추천 곡 더 보기 ▽";
-            } else { dom.homeLoadMoreBtn.style.display = "none"; }
-            
-            STATE.isHomeLoading = false;
-            return;
+              if (STATE.homeNextPageToken) {
+                dom.homeLoadMoreBtn.style.display = "block";
+                dom.homeLoadMoreBtn.textContent = "추천 곡 더 보기 ▽";
+              } else { dom.homeLoadMoreBtn.style.display = "none"; }
+              
+              if (requestId === STATE.homeFeedRequestId) STATE.isHomeLoading = false;
+              return;
+            }
           } catch (e) {
-            console.error("API Error");
-            STATE.isHomeLoading = false;
+            console.error("API Error", e);
           }
         }
 
-        dom.recommendTitle.textContent = shelfTitleText + " (데모)";
+        if (requestId !== STATE.homeFeedRequestId) return;
+
+        dom.recommendTitle.textContent = shelfTitleText + (STATE.apiKey ? " (데모 폴백)" : " (데모)");
         renderQuickPicks(pool);
-        renderRecommendGrid(CORE_DATABASE.all);
+        const mixPool = STATE.currentMood === "all" ? CORE_DATABASE.all : (CORE_DATABASE[STATE.currentMood] || CORE_DATABASE.all);
+        STATE.homeRecommendTracks = mixPool;
+        renderRecommendGrid(mixPool);
+        dom.homeLoadMoreBtn.style.display = "none";
         STATE.isHomeLoading = false;
       }
 
@@ -2154,19 +2198,10 @@ You're my chemical hype boy
             ytVideoId = track.ytId;
           } else {
             try {
-              const queryStr = `${track.artist || track.channelTitle || ""} ${track.title} official audio`;
-              const res = await fetch(`/api/search?q=${encodeURIComponent(queryStr)}`);
-              const resData = await res.json();
-              if (resData.success && resData.videoId) {
-                ytVideoId = resData.videoId;
-                track.ytId = ytVideoId;
-              } else {
-                triggerToast("YouTube에서 곡을 찾을 수 없습니다.");
-                dom.deckName.textContent = "재생 실패";
-                return;
-              }
+              ytVideoId = await resolveYouTubeVideoId(track.title, track.artist || track.channelTitle || "");
+              track.ytId = ytVideoId;
             } catch (e) {
-              triggerToast("YouTube 연동 중 오류가 발생했습니다.");
+              triggerToast(e.message || "YouTube 연동 중 오류가 발생했습니다.");
               dom.deckName.textContent = "재생 실패";
               return;
             }
@@ -2191,6 +2226,11 @@ You're my chemical hype boy
         STATE.historyTracks = [track, ...STATE.historyTracks.filter(t => t.id !== track.id)];
         localStorage.setItem("aura_ym_history", JSON.stringify(STATE.historyTracks));
         updateHistoryListView();
+
+        const artistHint = track.artist || track.channelTitle || "";
+        if (artistHint && artistHint !== STATE.lastHomeArtistHint) {
+          scheduleHomeFeedsRefresh("playback");
+        }
         
         renderQueuePanelListView();
         updateLyricsView();
@@ -2201,7 +2241,7 @@ You're my chemical hype boy
           navigator.mediaSession.metadata = new MediaMetadata({
             title: track.title,
             artist: track.artist || track.channelTitle || 'Aura Music',
-            album: 'Aura Premium',
+            album: 'Aura Music',
             artwork: [
               { src: track.albumArt || `https://i.ytimg.com/vi/${ytVideoId}/mqdefault.jpg`, sizes: '320x180', type: 'image/jpeg' },
               { src: track.albumArt || `https://i.ytimg.com/vi/${ytVideoId}/hqdefault.jpg`, sizes: '480x360', type: 'image/jpeg' }
@@ -2315,6 +2355,7 @@ You're my chemical hype boy
         dom.viewPanes.forEach(pane => pane.classList.toggle("active", pane.id === targetPaneId));
         
         if (targetPaneId === "pane-top100") renderTop100View();
+        if (targetPaneId === "pane-home") scheduleHomeFeedsRefresh("force");
       }
 
       function initCoreEventListeners() {
@@ -2327,7 +2368,7 @@ You're my chemical hype boy
             dom.moodChips.forEach(c => c.classList.remove("active"));
             chip.classList.add("active");
             STATE.currentMood = chip.dataset.mood;
-            renderHomeFeeds();
+            renderHomeFeeds(false, true);
           });
         });
 
@@ -2342,8 +2383,6 @@ You're my chemical hype boy
         dom.homeLoadMoreBtn.addEventListener("click", () => {
           renderHomeFeeds(true);
         });
-
-        dom.deckDownloadBtn.addEventListener("click", downloadCurrentTrack);
 
         const scrollObserver = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
@@ -2487,8 +2526,15 @@ You're my chemical hype boy
           STATE.apiKey = k;
           localStorage.setItem("aura_ym_key", k);
           triggerToast(k ? "API Key가 저장되었습니다." : "API Key가 지워졌습니다.");
-          renderHomeFeeds();
+          renderHomeFeeds(false, true);
         });
+
+        if (dom.ytPlayerVisibleToggle) {
+          dom.ytPlayerVisibleToggle.addEventListener("change", () => {
+            setYtPlayerVisible(dom.ytPlayerVisibleToggle.checked);
+            triggerToast(STATE.ytPlayerVisible ? "YouTube 화면을 표시합니다." : "YouTube 화면을 숨겼습니다.");
+          });
+        }
 
         dom.deckProgressRail.addEventListener("click", (e) => {
           if (!STATE.isEngineReady || !STATE.playerEngine.getDuration) return;
@@ -2513,9 +2559,15 @@ You're my chemical hype boy
 
         window.onYouTubeIframeAPIReady = function() {
           STATE.playerEngine = new YT.Player("youtube-iframe-hardware-engine", {
-            height: "1",
-            width: "1",
-            playerVars: { autoplay: 1, controls: 0, disablekb: 1 },
+            height: "112",
+            width: "200",
+            playerVars: {
+              autoplay: 1,
+              controls: 1,
+              modestbranding: 1,
+              rel: 0,
+              playsinline: 1
+            },
             events: {
               onReady: function() {
                 STATE.isEngineReady = true;
@@ -2546,7 +2598,7 @@ You're my chemical hype boy
       window.addEventListener("DOMContentLoaded", () => {
         initSystemStorage();
         initCoreEventListeners();
-        renderHomeFeeds();
+        renderHomeFeeds(false, true);
         initYouTubeEngine();
       });
 
